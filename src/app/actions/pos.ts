@@ -54,7 +54,7 @@ export async function calculateInvoice(
           if (doctorCondition) {
             const reward = rule.rule_rewards[0];
             if (reward) {
-              if (reward.reward_type === 'DISCOUNT_AMOUNT') {
+              if (reward.reward_type === 'DISCOUNT_FIXED') {
                 itemDiscount += Number(reward.reward_value || 0);
               } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
                 itemDiscount += (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);

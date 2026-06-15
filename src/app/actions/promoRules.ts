@@ -29,7 +29,6 @@ export async function updatePromoRule(id: number, data: any) {
       where: { id },
       data: {
         rule_name: data.rule_name,
-        rule_priority: data.rule_priority || 0,
         is_exclusive_rule: data.is_exclusive_rule ?? false,
       }
     });
