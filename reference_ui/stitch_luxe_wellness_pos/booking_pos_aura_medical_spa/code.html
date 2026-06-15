@@ -1,0 +1,468 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Aura Medical Spa - POS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#10b981",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f4fbf4",
+                        "on-primary-fixed-variant": "#005236",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-container-low": "#eef6ee",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "on-tertiary-container": "#36393b",
+                        "inverse-primary": "#4edea3",
+                        "surface-container-highest": "#dde4dd",
+                        "tertiary-container": "#a0a3a5",
+                        "surface-variant": "#dde4dd",
+                        "surface-tint": "#006c49",
+                        "secondary": "#565e74",
+                        "surface": "#f4fbf4",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#3c4a42",
+                        "surface-container": "#e8f0e9",
+                        "primary": "#006c49",
+                        "secondary-container": "#dae2fd",
+                        "tertiary-fixed": "#e0e3e5",
+                        "primary-fixed-dim": "#4edea3",
+                        "surface-dim": "#d4dcd5",
+                        "on-secondary-container": "#5c647a",
+                        "inverse-on-surface": "#ebf3eb",
+                        "background": "#f4fbf4",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "on-background": "#161d19",
+                        "surface-container-high": "#e3eae3",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-surface": "#161d19",
+                        "outline-variant": "#bbcabf",
+                        "outline": "#6c7a71",
+                        "inverse-surface": "#2b322d",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5c5f61",
+                        "primary-fixed": "#6ffbbe",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#002113",
+                        "secondary-fixed": "#dae2fd",
+                        "on-primary-container": "#00422b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "0.5rem",
+                        "gutter": "1.5rem",
+                        "margin-desktop": "2.5rem",
+                        "base": "4px",
+                        "margin-mobile": "1rem",
+                        "sm": "1rem",
+                        "md": "1.5rem",
+                        "lg": "2rem",
+                        "xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Geist"],
+                        "display": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "body-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Hide scrollbar for cleaner look in sidebars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Custom input focus ring to match primary */
+        input:focus {
+            --tw-ring-color: theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-white/80 backdrop-blur-md border-b border-outline-variant/20 flex items-center justify-between px-8 z-40 transition-all duration-300">
+  <div class="flex items-center gap-4">
+    <h2 class="text-headline-md font-bold text-primary">Aura Medical Spa</h2>
+  </div>
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-2">
+      <button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+        <span class="material-symbols-outlined">help</span>
+      </button>
+    </div>
+    <div class="h-8 w-px bg-outline-variant/20"></div>
+    <div class="flex items-center gap-3 cursor-pointer hover:bg-surface-container-high p-2 rounded-xl transition-colors">
+      <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhIqUUMkgGiQ9boJ0YXoeTebE1jS9O42Dn6zWixOi5TQxAk1lGJ0LE5Tx9Ni4xWv-ZfrxOd5rQ3vrKyH39v-uY3naW8fkgDXf_GgVZ7rg61USsbOPSj_nFjWcxPmgpQXrW3ZdBzKS0WidjdRdsgacUHNDBdICB5Ao6vEh8hNvrFOoh_w6FIuWXjsC541z7U0zxL2aOGTdGvV6vIrPeyXRDNL3QQEGlWVPNKswdz-pa-22YreYeInDjXlRG0gqd6sh9JAzLjxKfyA" alt="Dr. Julianne S." class="w-full h-full object-cover">
+      </div>
+      <span class="font-label-md text-on-surface">Dr. Julianne S.</span>
+    </div>
+  </div>
+</header>
+<!-- Side Navigation Bar -->
+<nav class="fixed left-0 top-0 h-screen w-64 bg-surface-container-low border-r border-outline-variant/20 flex flex-col z-50">
+  <div class="p-6 mb-4">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+        <span class="material-symbols-outlined text-white">spa</span>
+      </div>
+      <h1 class="font-headline-md font-bold text-primary">Aura</h1>
+    </div>
+    <div class="space-y-1">
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary text-white shadow-md transition-all">
+        <span class="material-symbols-outlined">point_of_sale</span>
+        <span class="font-label-md">POS</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+        <span class="material-symbols-outlined">medical_services</span>
+        <span class="font-label-md">Services</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+        <span class="material-symbols-outlined">category</span>
+        <span class="font-label-md">Categories</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+        <span class="material-symbols-outlined">group</span>
+        <span class="font-label-md">Customers</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-md">Settings</span>
+      </a>
+    </div>
+  </div>
+  <div class="px-6 mb-6">
+    <button class="w-full py-3 bg-primary-container text-on-primary-container rounded-2xl font-label-md font-bold flex items-center justify-center gap-2 hover:shadow-md transition-all">
+      <span class="material-symbols-outlined">add</span>
+      <span class="">New Appointment</span>
+    </button>
+  </div>
+  <div class="mt-auto p-6 border-t border-outline-variant/20 space-y-1">
+    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all">
+      <span class="material-symbols-outlined">support_agent</span>
+      <span class="font-label-md">Support</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="font-label-md">Logout</span>
+    </a>
+  </div>
+</nav>
+<!-- Main Layout Workspace -->
+<main class="ml-64 pt-16 h-screen flex w-[calc(100%-16rem)] relative bg-surface">
+<!-- Background decorative elements for the 'neo-medical' feel -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary-container/5 blur-3xl"></div>
+<div class="absolute top-[60%] -left-[10%] w-[50%] h-[50%] rounded-full bg-secondary-container/10 blur-3xl"></div>
+</div>
+<!-- Left Panel: Services Catalog (Fluid width) -->
+<div class="flex-1 h-full overflow-y-auto no-scrollbar relative z-10 px-margin-desktop py-md">
+<!-- Sticky Search & Filters -->
+<div class="sticky top-0 z-20 pb-6 pt-2 bg-surface/90 backdrop-blur-md mb-6">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6">Catalog</h2>
+<div class="flex items-center space-x-4 mb-4">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full h-12 pl-12 pr-4 bg-white border-none rounded-xl shadow-sm text-on-surface focus:ring-2 focus:ring-primary font-body-md transition-shadow" placeholder="Search services..." type="text">
+</div>
+<button class="h-12 px-6 bg-white border border-outline-variant/30 rounded-xl shadow-sm flex items-center space-x-2 text-on-surface font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">tune</span>
+<span class="">Filter</span>
+</button>
+</div>
+<!-- Category Pills -->
+<div class="flex space-x-2 overflow-x-auto no-scrollbar pb-2">
+<button class="px-5 py-2 rounded-full bg-primary text-white font-label-sm shadow-md whitespace-nowrap">All Services</button>
+<button class="px-5 py-2 rounded-full bg-white border border-outline-variant/30 text-on-surface-variant font-label-sm hover:bg-surface-container-low transition-colors whitespace-nowrap">Injectables</button>
+<button class="px-5 py-2 rounded-full bg-white border border-outline-variant/30 text-on-surface-variant font-label-sm hover:bg-surface-container-low transition-colors whitespace-nowrap">Laser Treatments</button>
+<button class="px-5 py-2 rounded-full bg-white border border-outline-variant/30 text-on-surface-variant font-label-sm hover:bg-surface-container-low transition-colors whitespace-nowrap">Facials &amp; Peels</button>
+<button class="px-5 py-2 rounded-full bg-white border border-outline-variant/30 text-on-surface-variant font-label-sm hover:bg-surface-container-low transition-colors whitespace-nowrap">Body Contouring</button>
+</div>
+</div>
+<!-- Bento Grid of Services -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+<!-- Service Card 1 -->
+<div class="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-outline-variant/10 group flex flex-col h-full cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                            Injectables
+                        </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">Botox® Cosmetic</h3>
+<p class="text-sm text-on-surface-variant mb-6 flex-1 relative z-10 line-clamp-2">Targeted neurotoxin injection to smooth fine lines and wrinkles in the upper face.</p>
+<div class="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Starting at</span>
+<span class="font-headline-md text-lg text-primary font-bold">$12.00 <span class="text-xs font-normal text-on-surface-variant">/ unit</span></span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary hover:text-white transition-colors group-hover:scale-110">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Service Card 2 -->
+<div class="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-outline-variant/10 group flex flex-col h-full cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                            Laser Treatments
+                        </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">Clear + Brilliant®</h3>
+<p class="text-sm text-on-surface-variant mb-6 flex-1 relative z-10 line-clamp-2">Gentle laser resurfacing to improve tone, texture, and radiance with minimal downtime.</p>
+<div class="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Per Session</span>
+<span class="font-headline-md text-lg text-primary font-bold">$450.00</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary hover:text-white transition-colors group-hover:scale-110">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Service Card 3 -->
+<div class="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-outline-variant/10 group flex flex-col h-full cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                            Facials &amp; Peels
+                        </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">HydraFacial MD®</h3>
+<p class="text-sm text-on-surface-variant mb-6 flex-1 relative z-10 line-clamp-2">Deep cleansing, exfoliation, extraction, and hydration using patented vortex technology.</p>
+<div class="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Signature</span>
+<span class="font-headline-md text-lg text-primary font-bold">$199.00</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary hover:text-white transition-colors group-hover:scale-110">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Service Card 4 -->
+<div class="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-outline-variant/10 group flex flex-col h-full cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                            Injectables
+                        </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">Juvederm Voluma®</h3>
+<p class="text-sm text-on-surface-variant mb-6 flex-1 relative z-10 line-clamp-2">Hyaluronic acid filler designed to restore volume in the cheeks and mid-face.</p>
+<div class="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Per Syringe</span>
+<span class="font-headline-md text-lg text-primary font-bold">$850.00</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary hover:text-white transition-colors group-hover:scale-110">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+<!-- Service Card 5 -->
+<div class="bg-white rounded-2xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-outline-variant/10 group flex flex-col h-full cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                            Body Contouring
+                        </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">info</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 relative z-10">CoolSculpting®</h3>
+<p class="text-sm text-on-surface-variant mb-6 flex-1 relative z-10 line-clamp-2">Non-invasive fat reduction treatment using controlled cooling technology.</p>
+<div class="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">Per Cycle</span>
+<span class="font-headline-md text-lg text-primary font-bold">$750.00</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface hover:bg-primary hover:text-white transition-colors group-hover:scale-110">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: Cart & Checkout (Fixed Width, Sticky) -->
+<div class="w-[420px] h-full bg-white border-l border-outline-variant/20 shadow-[-10px_0_30px_rgba(0,0,0,0.02)] flex flex-col z-20 relative">
+<!-- Customer Selection Header -->
+<div class="p-6 border-b border-outline-variant/20 bg-surface-container-lowest z-10">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Current Order</h3>
+<!-- Client Search/Select -->
+<div class="relative">
+<div class="flex items-center bg-surface-container px-4 py-3 rounded-xl border border-transparent focus-within:border-primary focus-within:bg-white transition-all shadow-sm">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">person_search</span>
+<input class="bg-transparent border-none p-0 w-full text-on-surface focus:ring-0 placeholder:text-on-surface-variant/60 font-body-md" placeholder="Select or add client..." type="text" value="Eleanor Vance">
+<button class="text-primary hover:text-primary-fixed-dim">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cart Items Area (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-6 space-y-4 bg-surface/30 no-scrollbar">
+<!-- Cart Item 1 -->
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col relative group">
+<div class="flex justify-between items-start mb-2">
+<div class="pr-6">
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Botox® Cosmetic</h4>
+<span class="text-xs text-on-surface-variant">Injectables • $12.00/unit</span>
+</div>
+<button class="text-on-surface-variant/50 hover:text-error transition-colors absolute top-4 right-4">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-2 pt-3 border-t border-outline-variant/10">
+<div class="flex items-center space-x-3 bg-surface-container-low rounded-lg p-1 border border-outline-variant/20">
+<button class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm transition-all text-on-surface">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-label-md w-6 text-center text-on-surface">40</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm transition-all text-on-surface">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">$480.00</span>
+</div>
+</div>
+<!-- Cart Item 2 -->
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col relative group">
+<div class="flex justify-between items-start mb-2">
+<div class="pr-6">
+<h4 class="font-label-md text-label-md font-bold text-on-surface">HydraFacial MD®</h4>
+<span class="text-xs text-on-surface-variant">Signature • $199.00</span>
+</div>
+<button class="text-on-surface-variant/50 hover:text-error transition-colors absolute top-4 right-4">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-2 pt-3 border-t border-outline-variant/10">
+<div class="flex items-center space-x-3 bg-surface-container-low rounded-lg p-1 border border-outline-variant/20">
+<button class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm transition-all text-on-surface">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-label-md w-6 text-center text-on-surface">1</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm transition-all text-on-surface">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface">$199.00</span>
+</div>
+</div>
+</div>
+<!-- Checkout Summary Bottom Area -->
+<div class="p-6 bg-white border-t border-outline-variant/20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] z-10">
+<!-- Discount/Notes Row -->
+<div class="flex space-x-2 mb-4">
+<button class="flex-1 py-2 border border-outline-variant/30 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center space-x-1">
+<span class="material-symbols-outlined text-[18px]">sell</span>
+<span class="">Add Discount</span>
+</button>
+<button class="flex-1 py-2 border border-outline-variant/30 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low transition-colors flex items-center justify-center space-x-1">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+<span class="">Add Note</span>
+</button>
+</div>
+<!-- Totals -->
+<div class="space-y-2 mb-6 text-sm">
+<div class="flex justify-between text-on-surface-variant">
+<span class="">Subtotal</span>
+<span class="">$679.00</span>
+</div>
+<div class="flex justify-between text-primary">
+<span class="">Discount (VIP 10%)</span>
+<span class="">-$67.90</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="">Tax (8.25%)</span>
+<span class="">$50.42</span>
+</div>
+<div class="h-px bg-outline-variant/20 my-3"></div>
+<div class="flex justify-between items-end">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Total</span>
+<span class="font-display text-display font-bold text-primary">$661.52</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl shadow-xl shadow-primary/20 flex items-center justify-center space-x-2 font-label-md text-lg font-bold transition-transform active:scale-[0.98]">
+<span class="">Charge $661.52</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+
+
+</body></html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Medical Spa - Service Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#10b981",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#f4fbf4",
+                        "on-primary-fixed-variant": "#005236",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-container-low": "#eef6ee",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "on-tertiary-container": "#36393b",
+                        "inverse-primary": "#4edea3",
+                        "surface-container-highest": "#dde4dd",
+                        "tertiary-container": "#a0a3a5",
+                        "surface-variant": "#dde4dd",
+                        "surface-tint": "#006c49",
+                        "secondary": "#565e74",
+                        "surface": "#f4fbf4",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#3c4a42",
+                        "surface-container": "#e8f0e9",
+                        "primary": "#006c49",
+                        "secondary-container": "#dae2fd",
+                        "tertiary-fixed": "#e0e3e5",
+                        "primary-fixed-dim": "#4edea3",
+                        "surface-dim": "#d4dcd5",
+                        "on-secondary-container": "#5c647a",
+                        "inverse-on-surface": "#ebf3eb",
+                        "background": "#f4fbf4",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "on-background": "#161d19",
+                        "surface-container-high": "#e3eae3",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#131b2e",
+                        "on-surface": "#161d19",
+                        "outline-variant": "#bbcabf",
+                        "outline": "#6c7a71",
+                        "inverse-surface": "#2b322d",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5c5f61",
+                        "primary-fixed": "#6ffbbe",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#002113",
+                        "secondary-fixed": "#dae2fd",
+                        "on-primary-container": "#00422b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "0.5rem",
+                        "gutter": "1.5rem",
+                        "margin-desktop": "2.5rem",
+                        "base": "4px",
+                        "margin-mobile": "1rem",
+                        "sm": "1rem",
+                        "md": "1.5rem",
+                        "lg": "2rem",
+                        "xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Geist"],
+                        "display": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "body-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8fafc; /* Slate 50 approx for body */ }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md text-on-background bg-slate-50 antialiased overflow-x-hidden min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-screen w-64 z-50 bg-surface dark:bg-surface-dim shadow-xl bg-surface-container-low dark:bg-surface-container-lowest fixed left-0 top-0 py-md px-xs">
+<div class="px-gutter mb-xl flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold">A</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Aura Medical</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-80">Premium Clinic Management</p>
+</div>
+</div>
+<button class="mx-xs mb-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg h-11 font-label-md text-label-md flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow">
+<span class="material-symbols-outlined text-xl">add</span>
+            New Appointment
+        </button>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">point_of_sale</span>
+                        POS
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-primary dark:text-primary-fixed-dim font-bold border-r-4 border-primary bg-primary-container/10 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+                        Services
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">category</span>
+                        Categories
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">group</span>
+                        Customers
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant/30">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">support_agent</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-lg font-label-md text-label-md text-on-surface-variant opacity-80 hover:bg-primary-container/10 hover:text-primary transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">logout</span>
+                        Logout
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 relative min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full md:w-[calc(100%-16rem)] z-40 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm flex justify-between items-center px-gutter h-16 transition-all">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center bg-slate-100 rounded-full px-4 py-2 w-64 focus-within:ring-2 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-lg mr-2">search</span>
+<input class="bg-transparent border-none outline-none text-body-md w-full p-0 text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0" placeholder="Search services..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-px bg-outline-variant/50 mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer">
+<span class="font-label-md text-label-md text-on-surface hidden sm:block">Dr. Julianne S.</span>
+<div class="w-8 h-8 rounded-full bg-slate-300 overflow-hidden border border-outline-variant/30">
+<img alt="Chief Practitioner Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a female medical practitioner in a clinical setting. Soft, natural lighting. High-end medical spa aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn3D8vcK8jBEmasg-XpsPyxRNMUcH51VGypl8zmbrglURxuxAeUhC2jM4WYC463AvSYsdTkBThfZzKWeeuSYTMUgl1g-DPhSOsazG8N3WG33DTY0LI6PuLzXegVjYIOOm0bJh9g1HHejzqbXdoB-mjhsEYtqWQafUNGjeKxn2xPAmkyYzjEN8g2Hzvx13RzpADVxE-Fy1Z-lGaNqaLfb9Y8f38kJKSwYiCrjFGsF-GyvCjG6eqz4yAdgcUA4ZCwgnnBYCNR21x-g"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="pt-24 px-margin-mobile md:px-margin-desktop pb-xl flex-1">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-background">Service Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage treatments, pricing, and availability.</p>
+</div>
+<button class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg px-6 h-11 font-label-md text-label-md flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-shadow shrink-0 w-full md:w-auto">
+<span class="material-symbols-outlined text-xl">add</span>
+                    Add New Service
+                </button>
+</div>
+<!-- Data Table Card -->
+<div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 flex flex-col">
+<!-- Table Header/Controls -->
+<div class="p-gutter border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<div class="relative w-full sm:w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/70 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search by name or code..." type="text"/>
+</div>
+<button class="p-2 border border-slate-200 rounded-lg text-on-surface-variant hover:bg-slate-50 transition-colors bg-white shadow-sm">
+<span class="material-symbols-outlined text-lg">filter_list</span>
+</button>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+                        Showing 1-10 of 45 services
+                    </div>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 border-b border-slate-100">
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Code</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Service Name</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Category</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Duration</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider text-right">Price</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider text-center">Status</th>
+<th class="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant font-medium">LAS-01</td>
+<td class="py-4 px-6">
+<div class="font-label-md text-label-md text-on-background font-semibold">Laser Hair Removal - Full Legs</div>
+<div class="text-xs text-on-surface-variant mt-0.5">Advanced Diode Technology</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Laser Treatments</span>
+</td>
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant">60 min</td>
+<td class="py-4 px-6 font-label-md text-label-md text-on-background font-semibold text-right">$250.00</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant font-medium">INJ-04</td>
+<td class="py-4 px-6">
+<div class="font-label-md text-label-md text-on-background font-semibold">Botox Cosmetic - Forehead</div>
+<div class="text-xs text-on-surface-variant mt-0.5">Per unit pricing</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Injectables</span>
+</td>
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant">30 min</td>
+<td class="py-4 px-6 font-label-md text-label-md text-on-background font-semibold text-right">$14.00/u</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant font-medium">FAC-02</td>
+<td class="py-4 px-6">
+<div class="font-label-md text-label-md text-on-background font-semibold">HydraFacial Signature</div>
+<div class="text-xs text-on-surface-variant mt-0.5">Deep cleanse and extraction</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-800">Facials</span>
+</td>
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant">45 min</td>
+<td class="py-4 px-6 font-label-md text-label-md text-on-background font-semibold text-right">$199.00</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Active</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50 transition-colors group">
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant font-medium">BDY-05</td>
+<td class="py-4 px-6">
+<div class="font-label-md text-label-md text-on-background font-semibold">CoolSculpting - Abdomen</div>
+<div class="text-xs text-on-surface-variant mt-0.5">Non-invasive fat reduction</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Body Contouring</span>
+</td>
+<td class="py-4 px-6 font-body-md text-body-md text-on-surface-variant">90 min</td>
+<td class="py-4 px-6 font-label-md text-label-md text-on-background font-semibold text-right">$750.00</td>
+<td class="py-4 px-6 text-center">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">Draft</span>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="p-gutter border-t border-slate-100 bg-white flex justify-between items-center">
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+                        Previous
+                    </button>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md flex items-center justify-center font-bold">1</button>
+<button class="w-8 h-8 rounded-full hover:bg-slate-100 text-on-surface-variant font-label-md text-label-md flex items-center justify-center transition-colors">2</button>
+<button class="w-8 h-8 rounded-full hover:bg-slate-100 text-on-surface-variant font-label-md text-label-md flex items-center justify-center transition-colors">3</button>
+<span class="text-on-surface-variant">...</span>
+<button class="w-8 h-8 rounded-full hover:bg-slate-100 text-on-surface-variant font-label-md text-label-md flex items-center justify-center transition-colors">5</button>
+</div>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md">
+                        Next
+                        <span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

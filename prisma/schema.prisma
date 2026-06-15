@@ -1,0 +1,435 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model branches {
+  id                 Int                  @id @default(autoincrement())
+  branch_code        String               @unique(map: "branch_code") @db.VarChar(50)
+  branch_name        String               @db.VarChar(255)
+  address            String?              @db.VarChar(500)
+  is_active          Boolean?             @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(0)
+  appointments       appointments[]
+  employees          employees[]
+  invoices           invoices[]
+  promotion_branches promotion_branches[]
+  service_prices     service_prices[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model combo_items {
+  id               Int       @id @default(autoincrement())
+  combo_id         Int
+  service_id       Int?
+  quantity         Int?      @default(1)
+  allocated_price  Decimal?  @db.Decimal(15, 2)
+  item_description String?   @db.VarChar(500)
+  combos           combos    @relation(fields: [combo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "combo_items_ibfk_1")
+  services         services? @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "combo_items_ibfk_2")
+
+  @@unique([combo_id, service_id], map: "uq_combo_service")
+  @@index([combo_id], map: "idx_ci_combo")
+  @@index([service_id], map: "idx_ci_service")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model combos {
+  id                   Int           @id @default(autoincrement())
+  promotion_id         Int
+  combo_name           String        @db.VarChar(500)
+  original_total_price Decimal       @db.Decimal(15, 2)
+  combo_price          Decimal       @db.Decimal(15, 2)
+  allow_extra_rules    Boolean?      @default(false)
+  max_slots            Int?
+  is_active            Boolean?      @default(true)
+  created_at           DateTime?     @default(now()) @db.Timestamp(0)
+  combo_items          combo_items[]
+  promotions           promotions    @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "combos_ibfk_1")
+
+  @@index([promotion_id, is_active], map: "idx_combo_promo_active")
+  @@index([promotion_id, is_active], map: "idx_combos_promotion")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model customers {
+  id            Int               @id @default(autoincrement())
+  full_name     String            @db.VarChar(255)
+  phone_number  String?           @db.VarChar(20)
+  date_of_birth DateTime?         @db.Date
+  gender        customers_gender?
+  occupation    String?           @db.VarChar(100)
+  customer_type String?           @default("NEW") @db.VarChar(50)
+  created_at    DateTime?         @default(now()) @db.Timestamp(0)
+  appointments  appointments[]
+  invoices      invoices[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model employees {
+  id            Int               @id @default(autoincrement())
+  employee_code String            @unique(map: "employee_code") @db.VarChar(50)
+  full_name     String            @db.VarChar(255)
+  email         String?           @unique(map: "email") @db.VarChar(255)
+  phone_number  String?           @unique(map: "phone_number") @db.VarChar(20)
+  role          employees_role
+  branch_id     Int?
+  username      String?           @unique(map: "username") @db.VarChar(100)
+  password_hash String?           @db.VarChar(255)
+  status        employees_status? @default(ACTIVE)
+  created_at    DateTime?         @default(now()) @db.Timestamp(0)
+  appointments  appointments[]
+  branches      branches?         @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "employees_ibfk_1")
+  invoice_items invoice_items[]
+  invoices      invoices[]
+
+  @@index([branch_id], map: "branch_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model invoice_items {
+  id              Int          @id @default(autoincrement())
+  invoice_id      Int
+  service_id      Int
+  doctor_id       Int?
+  quantity        Int?         @default(1)
+  base_price      Decimal      @db.Decimal(15, 2)
+  discount_amount Decimal      @default(0.00) @db.Decimal(15, 2)
+  final_price     Decimal      @db.Decimal(15, 2)
+  applied_rule_id Int?
+  created_at      DateTime?    @default(now()) @db.Timestamp(0)
+  invoices        invoices     @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invoice_items_ibfk_1")
+  services        services     @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoice_items_ibfk_2")
+  promo_rules     promo_rules? @relation(fields: [applied_rule_id], references: [id], onUpdate: NoAction, map: "invoice_items_ibfk_3")
+  employees       employees?   @relation(fields: [doctor_id], references: [id], onUpdate: NoAction, map: "invoice_items_ibfk_4")
+
+  @@index([applied_rule_id], map: "applied_rule_id")
+  @@index([doctor_id], map: "doctor_id")
+  @@index([invoice_id], map: "invoice_id")
+  @@index([service_id], map: "service_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model invoices {
+  id                   Int                @id @default(autoincrement())
+  customer_id          Int
+  branch_id            Int?
+  consultant_id        Int?
+  total_original_price Decimal            @default(0.00) @db.Decimal(15, 2)
+  total_discount       Decimal            @default(0.00) @db.Decimal(15, 2)
+  final_price          Decimal            @default(0.00) @db.Decimal(15, 2)
+  amount_paid          Decimal            @default(0.00) @db.Decimal(15, 2)
+  status               invoices_status?   @default(DRAFT)
+  created_at           DateTime?          @default(now()) @db.Timestamp(0)
+  invoice_items        invoice_items[]
+  invoice_payments     invoice_payments[]
+  customers            customers          @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invoices_ibfk_1")
+  branches             branches?          @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "invoices_ibfk_2")
+  employees            employees?         @relation(fields: [consultant_id], references: [id], onUpdate: NoAction, map: "invoices_ibfk_3")
+
+  @@index([branch_id], map: "branch_id")
+  @@index([consultant_id], map: "consultant_id")
+  @@index([customer_id], map: "customer_id")
+}
+
+model invoice_payments {
+  id             Int       @id @default(autoincrement())
+  invoice_id     Int
+  amount         Decimal   @db.Decimal(15, 2)
+  payment_method String    @db.VarChar(50)
+  payment_date   DateTime? @default(now()) @db.Timestamp(0)
+  cashier_id     Int?
+  invoices       invoices  @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([invoice_id])
+  @@index([cashier_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model promo_rules {
+  id                       Int               @id @default(autoincrement())
+  promotion_id             Int
+  rule_name                String            @db.VarChar(500)
+  is_exclusive_rule        Boolean?          @default(false)
+  is_stackable_with_others Boolean?          @default(true)
+  max_applications         Int?
+  created_at               DateTime?         @default(now()) @db.Timestamp(0)
+  invoice_items            invoice_items[]
+  promotions               promotions        @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "promo_rules_ibfk_1")
+  rule_conditions          rule_conditions[]
+  rule_rewards             rule_rewards[]
+
+  @@index([promotion_id], map: "idx_promo_rules_promotion")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model promotion_branches {
+  promotion_id Int
+  branch_id    Int
+  promotions   promotions @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "promotion_branches_ibfk_1")
+  branches     branches   @relation(fields: [branch_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "promotion_branches_ibfk_2")
+
+  @@id([promotion_id, branch_id])
+  @@index([branch_id], map: "branch_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model promotion_categories {
+  promotion_id       Int
+  category_id        Int
+  promotions         promotions         @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "promotion_categories_ibfk_1")
+  service_categories service_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "promotion_categories_ibfk_2")
+
+  @@id([promotion_id, category_id])
+  @@index([category_id], map: "category_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model promotions {
+  id                       Int                       @id @default(autoincrement())
+  promotion_name           String                    @db.VarChar(500)
+  promotion_type           promotions_promotion_type @default(REGULAR)
+  start_date               DateTime                  @db.DateTime(0)
+  end_date                 DateTime                  @db.DateTime(0)
+  applicable_days          String?                   @db.VarChar(50)
+  max_discount_percent_cap Decimal?                  @default(50.00) @db.Decimal(5, 2)
+  is_stackable             Boolean?                  @default(true)
+  description              String?                   @db.Text
+  is_active                Boolean?                  @default(true)
+  created_at               DateTime?                 @default(now()) @db.Timestamp(0)
+  updated_at               DateTime?                 @default(now()) @db.Timestamp(0)
+  combos                   combos[]
+  promo_rules              promo_rules[]
+  promotion_branches       promotion_branches[]
+  promotion_categories     promotion_categories[]
+  voucher_tiers            voucher_tiers[]
+
+  @@index([is_active, start_date, end_date], map: "idx_promotions_active_dates")
+  @@index([promotion_type], map: "idx_promotions_type")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model rule_conditions {
+  id                 Int                           @id @default(autoincrement())
+  rule_id            Int
+  condition_group    Int                           @default(1)
+  criteria_type      rule_conditions_criteria_type
+  operator           rule_conditions_operator      @default(EQ)
+  value_num          Decimal?                      @db.Decimal(15, 2)
+  value_num_max      Decimal?                      @db.Decimal(15, 2)
+  value_text         String?                       @db.VarChar(500)
+  target_service_id  Int?
+  target_category_id Int?
+  promo_rules        promo_rules                   @relation(fields: [rule_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rule_conditions_ibfk_1")
+  services           services?                     @relation(fields: [target_service_id], references: [id], onUpdate: NoAction, map: "rule_conditions_ibfk_2")
+  service_categories service_categories?           @relation(fields: [target_category_id], references: [id], onUpdate: NoAction, map: "rule_conditions_ibfk_3")
+
+  @@index([rule_id, condition_group], map: "idx_rule_conditions_rule_group")
+  @@index([target_category_id], map: "target_category_id")
+  @@index([target_service_id], map: "target_service_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model rule_rewards {
+  id                        Int                      @id @default(autoincrement())
+  rule_id                   Int
+  reward_type               rule_rewards_reward_type
+  reward_value              Decimal?                 @db.Decimal(15, 2)
+  target_service_id         Int?
+  gift_description          String?                  @db.VarChar(500)
+  voucher_duration_days     Int?
+  installment_months        Int?
+  installment_rate          Decimal?                 @default(0.00) @db.Decimal(5, 2)
+  recurring_interval_months Int?
+  promo_rules               promo_rules              @relation(fields: [rule_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "rule_rewards_ibfk_1")
+  services                  services?                @relation(fields: [target_service_id], references: [id], onUpdate: NoAction, map: "rule_rewards_ibfk_2")
+
+  @@index([rule_id], map: "idx_rule_rewards_rule")
+  @@index([target_service_id], map: "target_service_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_categories {
+  id                       Int                    @id @default(autoincrement())
+  parent_id                Int?
+  category_code            String                 @unique(map: "category_code") @db.VarChar(50)
+  category_name            String                 @db.VarChar(255)
+  category_level           Int                    @default(1) @db.TinyInt
+  display_order            Int?
+  created_at               DateTime?              @default(now()) @db.Timestamp(0)
+  promotion_categories     promotion_categories[]
+  rule_conditions          rule_conditions[]
+  service_categories       service_categories?    @relation("service_categoriesToservice_categories", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "service_categories_ibfk_1")
+  other_service_categories service_categories[]   @relation("service_categoriesToservice_categories")
+  services                 services[]
+
+  @@index([parent_id, category_level], map: "idx_categories_parent")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model service_prices {
+  id             Int       @id @default(autoincrement())
+  service_id     Int
+  branch_id      Int?
+  price_type     String    @default("STANDARD") @db.VarChar(50)
+  base_price     Decimal   @default(0.00) @db.Decimal(15, 2)
+  effective_date DateTime  @db.Date
+  end_date       DateTime? @db.Date
+  is_current     Boolean?  @default(true)
+  services       services  @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "service_prices_ibfk_1")
+  branches       branches? @relation(fields: [branch_id], references: [id], onUpdate: NoAction, map: "service_prices_ibfk_2")
+
+  @@unique([service_id, branch_id, price_type, effective_date], map: "uq_service_branch_price_effective")
+  @@index([branch_id], map: "branch_id")
+  @@index([service_id, branch_id, price_type, is_current], map: "idx_service_prices_current")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model services {
+  id                 Int                @id @default(autoincrement())
+  category_id        Int
+  service_group_code String?            @db.VarChar(50)
+  item_code          String             @unique(map: "item_code") @db.VarChar(50)
+  item_name          String             @db.VarChar(500)
+  unit               String?            @db.VarChar(50)
+  tags               Json?
+  duration_minutes     Int?                   @default(30)
+  is_active          Boolean?           @default(true)
+  created_at         DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?          @default(now()) @db.Timestamp(0)
+  appointments         appointments[]
+  combo_items        combo_items[]
+  invoice_items      invoice_items[]
+  rule_conditions    rule_conditions[]
+  rule_rewards       rule_rewards[]
+  service_prices     service_prices[]
+  service_categories service_categories @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "services_ibfk_1")
+
+  @@index([category_id, is_active], map: "idx_services_category")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model voucher_tiers {
+  id                    Int        @id @default(autoincrement())
+  promotion_id          Int
+  min_bill_amount       Decimal    @db.Decimal(15, 2)
+  voucher_value         Decimal    @db.Decimal(15, 2)
+  voucher_duration_days Int
+  promotions            promotions @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "voucher_tiers_ibfk_1")
+
+  @@unique([promotion_id, min_bill_amount], map: "uq_promotion_tier")
+  @@index([promotion_id, min_bill_amount], map: "idx_voucher_tiers_promotion")
+  @@index([promotion_id, min_bill_amount], map: "idx_vt_promo_bill")
+}
+
+model appointments {
+  id               Int                 @id @default(autoincrement())
+  customer_id      Int
+  service_id       Int?
+  branch_id        Int?
+  employee_id      Int?
+  appointment_time DateTime            @db.DateTime(0)
+  status           appointments_status @default(SCHEDULED)
+  notes            String?             @db.Text
+  created_at       DateTime?           @default(now()) @db.Timestamp(0)
+
+  customers        customers           @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  services         services?           @relation(fields: [service_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  branches         branches?           @relation(fields: [branch_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  employees        employees?          @relation(fields: [employee_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([appointment_time])
+  @@index([customer_id])
+  @@index([employee_id])
+}
+
+enum promotions_promotion_type {
+  REGULAR
+  WEEKEND
+  FLASH_SALE
+  EVENT
+  COMBO_DEAL
+}
+
+enum rule_rewards_reward_type {
+  FIXED_PRICE
+  FIXED_PRICE_PER_ITEM
+  DISCOUNT_PERCENT
+  DISCOUNT_FIXED
+  FREE_SERVICE
+  FREE_PRODUCT
+  VOUCHER_CASH
+  CUSTOM_NOTE
+}
+
+enum rule_conditions_criteria_type {
+  TOTAL_BILL
+  GROUP_SIZE
+  CUSTOMER_TYPE
+  OCCUPATION
+  CUSTOMER_ATTRIBUTE
+  GROUP_RELATIONSHIP
+  PAYMENT_METHOD
+  PAYMENT_TIMING
+  SERVICE_SELECTED
+  SERVICE_QTY
+  REQUIRE_BUY_TOGETHER
+  COMBINED_SERVICE_VALUE
+  BOUGHT_TOGETHER_QTY
+  SERVICE_CATEGORY
+  DAY_OF_WEEK
+  SPECIFIC_DATE
+  SEVERITY_LEVEL
+  DOCTOR_SELECTED
+  MIN_COUNT_IN_GROUP
+  TAG_MATCH
+}
+
+enum customers_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum rule_conditions_operator {
+  EQ      @map("=")
+  GTE     @map(">=")
+  LTE     @map("<=")
+  GT      @map(">")
+  LT      @map("<")
+  IN
+  BETWEEN
+}
+
+enum employees_role {
+  CONSULTANT
+  DOCTOR
+  ADMIN
+  CASHIER
+  MANAGER
+}
+
+enum invoices_status {
+  DRAFT
+  PARTIAL
+  PAID
+  CANCELLED
+}
+
+enum appointments_status {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum employees_status {
+  ACTIVE
+  INACTIVE
+}
