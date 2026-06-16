@@ -4,23 +4,82 @@ import prisma from '@/lib/db';
 import { Prisma } from '@prisma/client';
 
 /**
- * MOCK: Calculate Discount based on cart items and customer.
- * In a real scenario, this would evaluate `promo_rules`.
+ * Evaluate a single condition
+ */
+function evaluateCondition(cond: any, context: any) {
+  const op = cond.operator || 'EQ';
+  const compare = (actual: number, expected: number) => {
+    switch (op) {
+      case 'EQ': return actual === expected;
+      case 'GTE': return actual >= expected;
+      case 'LTE': return actual <= expected;
+      case 'GT': return actual > expected;
+      case 'LT': return actual < expected;
+      default: return false;
+    }
+  };
+
+  switch (cond.criteria_type) {
+    case 'TOTAL_BILL':
+      return compare(context.subTotal, Number(cond.value_num || 0));
+    case 'GROUP_SIZE':
+      return compare(context.groupSize || 1, Number(cond.value_num || 1));
+    case 'SERVICE_SELECTED':
+      return context.item && context.item.id === cond.target_service_id;
+    case 'DOCTOR_SELECTED':
+      return context.item && context.item.doctor_id === Number(cond.value_num);
+    case 'CUSTOMER_TYPE':
+      return context.customer?.customer_type === cond.value_text;
+    case 'CUSTOMER_ATTRIBUTE':
+      if (cond.value_text === 'FIRST_TIME') return context.customer?.customer_type === 'NEW';
+      if (cond.value_text === 'BIRTHDAY') return false; // To be implemented with dob
+      return false;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Evaluate a rule with AND/OR logic using condition_group
+ */
+function evaluateRule(rule: any, context: any) {
+  if (!rule.rule_conditions || rule.rule_conditions.length === 0) return true; // No conditions = always true
+
+  // Group conditions by condition_group
+  const groupedConditions = rule.rule_conditions.reduce((acc: any, cond: any) => {
+    const group = cond.condition_group || 1;
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(cond);
+    return acc;
+  }, {});
+
+  // OR across groups: At least one group must be true
+  const groupKeys = Object.keys(groupedConditions);
+  for (const key of groupKeys) {
+    const group = groupedConditions[key];
+    // AND within group: All conditions in this group must be true
+    const groupResult = group.every((cond: any) => evaluateCondition(cond, context));
+    if (groupResult) {
+      return true; // Found a matching group
+    }
+  }
+
+  return false; // No group matched
+}
+
+/**
+ * Calculate Discount based on cart items, customer and promo_rules engine.
  */
 export async function calculateInvoice(
   cartItems: any[],
   customerId: number | null
 ) {
-  // Let's implement a simplified total_bill discount rule check for now.
   let subTotal = 0;
   cartItems.forEach(item => {
     subTotal += (item.price * item.quantity);
   });
 
   let totalDiscount = 0;
-  let finalTotal = subTotal;
-
-  // Let's fetch the customer to know their occupation/type if customerId is provided
   let customer = null;
   if (customerId) {
     customer = await prisma.customers.findUnique({ where: { id: customerId } });
@@ -42,39 +101,36 @@ export async function calculateInvoice(
     }
   });
 
-  // 2. Evaluate cart items
+  // Split into global vs specific rules
+  const allRules: any[] = [];
+  activePromos.forEach(promo => {
+    promo.promo_rules.forEach(rule => {
+      allRules.push({ ...rule, promotion_name: promo.promotion_name });
+    });
+  });
+
+  const globalRules = allRules.filter(r => !r.is_exclusive_rule);
+  const specificRules = allRules.filter(r => r.is_exclusive_rule);
+
+  // 2. Evaluate cart items for Specific Rules
   const evaluatedCartItems = cartItems.map(item => {
     let itemDiscount = 0;
+    const context = { subTotal, item, customer };
     
-    // Check DOCTOR_SELECTED rules
-    if (item.type === 'SERVICE' && item.doctor_id) {
-      activePromos.forEach(promo => {
-        promo.promo_rules.forEach(rule => {
-          const doctorCondition = rule.rule_conditions.find(c => c.criteria_type === 'DOCTOR_SELECTED' && Number(c.value_num) === item.doctor_id);
-          if (doctorCondition) {
-            const reward = rule.rule_rewards[0];
-            if (reward) {
-              if (reward.reward_type === 'DISCOUNT_FIXED') {
-                itemDiscount += Number(reward.reward_value || 0);
-              } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
-                itemDiscount += (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);
-              }
-              appliedPromotions.push(`[${promo.promotion_name}] ${rule.rule_name}`);
-            }
+    specificRules.forEach(rule => {
+      if (evaluateRule(rule, context)) {
+        rule.rule_rewards.forEach((reward: any) => {
+          if (reward.reward_type === 'DISCOUNT_FIXED') {
+            itemDiscount += Number(reward.reward_value || 0);
+          } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
+            itemDiscount += (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);
           }
+          const promoDesc = `[${rule.promotion_name}] ${rule.rule_name}`;
+          if (!appliedPromotions.includes(promoDesc)) appliedPromotions.push(promoDesc);
         });
-      });
-    }
+      }
+    });
 
-    // Basic Mock Logic: If customer is STUDENT -> 10% discount on total.
-    if (customer?.occupation === 'STUDENT') {
-       const studentDiscount = (item.price * item.quantity) * 0.1;
-       itemDiscount += studentDiscount;
-       if (!appliedPromotions.includes('Giảm 10% Khách hàng Học sinh / Sinh viên')) {
-         appliedPromotions.push('Giảm 10% Khách hàng Học sinh / Sinh viên');
-       }
-    }
-    
     totalDiscount += itemDiscount;
 
     return {
@@ -83,6 +139,25 @@ export async function calculateInvoice(
       final_price: item.price - (itemDiscount / item.quantity)
     };
   });
+
+  // 3. Evaluate Global Rules (on the whole bill)
+  const globalContext = { subTotal, customer };
+  let globalDiscount = 0;
+  globalRules.forEach(rule => {
+    if (evaluateRule(rule, globalContext)) {
+      rule.rule_rewards.forEach((reward: any) => {
+        if (reward.reward_type === 'DISCOUNT_FIXED') {
+          globalDiscount += Number(reward.reward_value || 0);
+        } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
+          globalDiscount += subTotal * (Number(reward.reward_value || 0) / 100);
+        }
+        const promoDesc = `[${rule.promotion_name}] ${rule.rule_name}`;
+        if (!appliedPromotions.includes(promoDesc)) appliedPromotions.push(promoDesc);
+      });
+    }
+  });
+
+  totalDiscount += globalDiscount;
 
   return {
     subTotal,

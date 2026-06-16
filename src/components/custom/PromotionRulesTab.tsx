@@ -52,7 +52,8 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
     value_num: 0,
     target_service_id: 0,
     target_category_id: 0,
-    value_text: ''
+    value_text: '',
+    condition_group: 1
   });
 
   // Reward
@@ -179,6 +180,16 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
 
   const renderRuleCard = (rule: any) => {
     const isExpanded = expandedRules.has(rule.id);
+    
+    // Group conditions by condition_group
+    const groupedConditions = (rule.rule_conditions || []).reduce((acc: any, cond: any) => {
+      const group = cond.condition_group || 1;
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(cond);
+      return acc;
+    }, {});
+    const conditionGroups = Object.keys(groupedConditions).map(Number).sort((a, b) => a - b);
+    const maxGroup = conditionGroups.length > 0 ? Math.max(...conditionGroups) : 0;
 
     return (
       <div key={rule.id} className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm transition-all">
@@ -214,24 +225,55 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
         <div className="bg-amber-50/30 p-4 rounded-xl border border-amber-100">
           <div className="flex justify-between items-center mb-3">
             <h5 className="font-semibold text-amber-800 flex items-center gap-2"><span className="material-symbols-outlined text-[18px]">help_clinic</span> ĐIỀU KIỆN (NẾU...)</h5>
-            <button onClick={() => {
-              setSelectedRule(rule);
-              setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_id: 0, target_category_id: 0, value_text: '' });
-              setIsCondModalOpen(true);
-            }} className="text-amber-700 text-xs font-medium hover:underline bg-amber-100 px-2 py-1 rounded-md">+ Thêm Điều Kiện</button>
           </div>
-          {rule.rule_conditions && rule.rule_conditions.length > 0 ? (
-            <ul className="space-y-2">
-              {rule.rule_conditions.map((cond: any) => (
-                <li key={cond.id} className="bg-white border border-amber-200 p-2.5 rounded-lg text-sm text-slate-700 flex justify-between items-center">
-                  <span className="font-medium">{formatCondition(cond)}</span>
-                  <button onClick={() => handleDeleteCond(cond.id)} className="text-slate-400 hover:text-error"><span className="material-symbols-outlined text-[16px]">close</span></button>
-                </li>
+          {conditionGroups.length > 0 ? (
+            <div className="space-y-4">
+              {conditionGroups.map((group: number, groupIdx: number) => (
+                <div key={group} className="relative">
+                  {groupIdx > 0 && (
+                    <div className="flex items-center justify-center my-3">
+                      <div className="h-px bg-amber-200 flex-1"></div>
+                      <span className="px-3 text-xs font-bold text-amber-600 bg-amber-50 rounded-full border border-amber-200">HOẶC</span>
+                      <div className="h-px bg-amber-200 flex-1"></div>
+                    </div>
+                  )}
+                  <div className="bg-white border border-amber-200 p-3 rounded-xl shadow-sm">
+                    <ul className="space-y-2">
+                      {groupedConditions[group].map((cond: any, idx: number) => (
+                        <li key={cond.id} className="flex flex-col gap-2">
+                          {idx > 0 && <div className="text-xs font-bold text-amber-500 pl-2">VÀ</div>}
+                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-lg text-sm text-slate-700 flex justify-between items-center">
+                            <span className="font-medium">{formatCondition(cond)}</span>
+                            <button onClick={() => handleDeleteCond(cond.id)} className="text-slate-400 hover:text-error"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 text-right">
+                      <button onClick={() => {
+                        setSelectedRule(rule);
+                        setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_id: 0, target_category_id: 0, value_text: '', condition_group: group });
+                        setIsCondModalOpen(true);
+                      }} className="text-amber-600 text-xs font-medium hover:text-amber-800 hover:underline inline-flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">add</span>Thêm điều kiện (VÀ)</button>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className="text-sm text-slate-400 italic">Áp dụng ngay không cần điều kiện.</p>
+            <p className="text-sm text-slate-400 italic mb-4">Áp dụng ngay không cần điều kiện.</p>
           )}
+          
+          <div className="mt-4 pt-4 border-t border-amber-200 text-center">
+             <button onClick={() => {
+                setSelectedRule(rule);
+                setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_id: 0, target_category_id: 0, value_text: '', condition_group: maxGroup + 1 });
+                setIsCondModalOpen(true);
+              }} className="text-amber-700 text-xs font-medium hover:bg-amber-200 bg-amber-100 px-3 py-1.5 rounded-lg inline-flex items-center gap-1 shadow-sm transition-colors border border-amber-200">
+               <span className="material-symbols-outlined text-[16px]">add_circle</span>
+               Thêm Nhóm Điều Kiện Mới (HOẶC)
+             </button>
+          </div>
         </div>
 
         {/* Rewards Column */}

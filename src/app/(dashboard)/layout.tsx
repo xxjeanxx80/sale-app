@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Top Navigation Bar */}
       <header className={`fixed top-0 right-0 ${isCollapsed ? 'left-20' : 'left-64'} h-16 bg-white/80 backdrop-blur-md border-b border-outline-variant/20 flex items-center justify-between px-8 z-40 transition-all duration-300`}>
         <div className="flex items-center gap-4">
-          <h2 className="text-headline-md font-bold text-primary">Clinic SaleApp</h2>
+          <h2 className="text-headline-md font-bold text-primary">Ứng dụng Thẩm Mỹ</h2>
         </div>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="h-8 w-px bg-outline-variant/20"></div>
           <div className="flex items-center gap-3 cursor-pointer hover:bg-surface-container-high p-2 rounded-xl transition-colors">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center bg-primary text-white">
-               <span className="material-symbols-outlined text-[18px]">person</span>
+              <span className="material-symbols-outlined text-[18px]">person</span>
             </div>
             <span className="font-label-md text-on-surface">Admin</span>
           </div>
@@ -50,12 +50,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="p-4 mb-4">
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-8 mt-2`}>
             <div className={`flex items-center gap-3 ${isCollapsed ? 'hidden' : 'flex'}`}>
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-                <span className="material-symbols-outlined text-white">spa</span>
-              </div>
-              <h1 className="font-headline-md font-bold text-primary">Aura</h1>
+              <img src="/logos/logo-ngang.png" alt="Aura Logo" className="h-8 object-contain" />
             </div>
-            <button 
+            <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="w-10 h-10 rounded-xl text-primary hover:bg-primary/10 flex items-center justify-center transition-colors shrink-0"
             >
@@ -69,11 +66,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    isActive
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
                       ? "bg-primary text-white shadow-md"
                       : "text-on-surface-variant hover:bg-primary/10 hover:text-primary"
-                  } ${isCollapsed ? 'justify-center' : ''}`}
+                    } ${isCollapsed ? 'justify-center' : ''}`}
                   title={isCollapsed ? item.title : undefined}
                 >
                   <span className="material-symbols-outlined shrink-0">{item.icon}</span>
@@ -103,7 +99,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary-container/5 blur-3xl"></div>
           <div className="absolute top-[60%] -left-[10%] w-[50%] h-[50%] rounded-full bg-secondary-container/10 blur-3xl"></div>
         </div>
-        
+
         {children}
       </main>
     </div>
