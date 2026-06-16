@@ -33,7 +33,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
 
   // Rule
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
-  const [ruleForm, setRuleForm] = useState({ id: 0, rule_name: '', is_exclusive_rule: false });
+  const [ruleForm, setRuleForm] = useState({ id: 0, rule_name: '', is_exclusive_rule: false, max_applications: '' as number | string });
   const [expandedRules, setExpandedRules] = useState<Set<number>>(new Set());
 
   const toggleRule = (id: number) => {
@@ -207,10 +207,11 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
                 {rule.is_exclusive_rule && <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-md">Quy tắc riêng</span>}
               </h4>
               <p className="text-xs text-slate-500 mt-1">Trạng thái cộng dồn: {rule.is_stackable_with_others ? 'Có' : 'Không'}</p>
+              {rule.max_applications && <p className="text-xs text-amber-600 mt-1 font-medium">Giới hạn suất: {rule.max_applications}</p>}
             </div>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => { setRuleForm({ id: rule.id, rule_name: rule.rule_name, is_exclusive_rule: rule.is_exclusive_rule }); setIsRuleModalOpen(true); }} className="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
+            <button onClick={() => { setRuleForm({ id: rule.id, rule_name: rule.rule_name, is_exclusive_rule: rule.is_exclusive_rule, max_applications: rule.max_applications || '' }); setIsRuleModalOpen(true); }} className="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
               <span className="material-symbols-outlined text-[18px]">edit</span>
             </button>
             <button onClick={() => handleDeleteRule(rule.id)} className="text-error p-2 hover:bg-error/10 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
@@ -315,7 +316,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
           {ruleType === 'GLOBAL' ? 'Quy tắc Chung (Áp dụng Toàn Hóa Đơn)' : ruleType === 'SPECIFIC' ? 'Quy tắc Riêng (Khuyến Mãi Theo Dịch Vụ)' : 'Cấu trúc Quy tắc Khuyến mãi'}
         </h3>
         <button onClick={() => {
-          setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC' });
+          setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC', max_applications: '' });
           setIsRuleModalOpen(true);
         }} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
@@ -353,6 +354,11 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
               <div>
                 <label className="block text-sm font-medium mb-1">Tên Quy tắc (Ghi chú)</label>
                 <input required type="text" className="w-full h-11 px-4 border rounded-xl" placeholder="VD: Nếu Tổng Bill &gt; 1Tr thì Giảm 10%" value={ruleForm.rule_name} onChange={e => setRuleForm({ ...ruleForm, rule_name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Số suất (Giới hạn áp dụng)</label>
+                <input type="number" min="1" className="w-full h-11 px-4 border rounded-xl" placeholder="Không nhập nếu không giới hạn" value={ruleForm.max_applications} onChange={e => setRuleForm({ ...ruleForm, max_applications: e.target.value ? Number(e.target.value) : '' })} />
+                <p className="text-xs text-slate-500 mt-1">Để trống nếu muốn áp dụng không giới hạn số lượng suất.</p>
               </div>
               {!ruleType && (
                 <div>

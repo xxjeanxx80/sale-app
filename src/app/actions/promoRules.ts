@@ -30,6 +30,7 @@ export async function updatePromoRule(id: number, data: any) {
       data: {
         rule_name: data.rule_name,
         is_exclusive_rule: data.is_exclusive_rule ?? false,
+        max_applications: data.max_applications || null,
       }
     });
     return { success: true };
