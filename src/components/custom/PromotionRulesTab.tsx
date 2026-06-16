@@ -50,7 +50,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
     criteria_type: 'TOTAL_BILL',
     operator: 'GTE',
     value_num: 0,
-    target_service_id: 0,
+    target_service_ids: [0],
     target_category_id: 0,
     value_text: '',
     condition_group: 1
@@ -95,10 +95,43 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
     e.preventDefault();
     if (!selectedRule) return;
     setLoading(true);
+
+    if (condForm.criteria_type === 'SERVICE_SELECTED') {
+      const validIds = condForm.target_service_ids.filter(id => id > 0);
+      if (validIds.length === 0) {
+        setLoading(false);
+        return alert('Vui lòng chọn ít nhất 1 dịch vụ');
+      }
+      
+      let allSuccess = true;
+      let lastError = '';
+      for (const sid of validIds) {
+        const data = {
+          ...condForm,
+          target_service_id: sid,
+          value_num: condForm.value_num === 0 ? null : condForm.value_num,
+          target_category_id: condForm.target_category_id === 0 ? null : condForm.target_category_id,
+          value_text: condForm.value_text.trim() === '' ? null : condForm.value_text
+        };
+        const res = await addRuleCondition(selectedRule.id, data);
+        if (!res.success) {
+          allSuccess = false;
+          lastError = res.error;
+        }
+      }
+
+      setLoading(false);
+      if (allSuccess) {
+        setIsCondModalOpen(false);
+        router.refresh();
+      } else alert(lastError || 'Có lỗi xảy ra khi lưu điều kiện');
+      return;
+    }
+
     const data = {
       ...condForm,
       value_num: condForm.value_num === 0 ? null : condForm.value_num,
-      target_service_id: condForm.target_service_id === 0 ? null : condForm.target_service_id,
+      target_service_id: condForm.target_service_ids[0] === 0 ? null : condForm.target_service_ids[0],
       target_category_id: condForm.target_category_id === 0 ? null : condForm.target_category_id,
       value_text: condForm.value_text.trim() === '' ? null : condForm.value_text
     };
@@ -253,7 +286,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
                     <div className="mt-3 text-right">
                       <button onClick={() => {
                         setSelectedRule(rule);
-                        setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_id: 0, target_category_id: 0, value_text: '', condition_group: group });
+                        setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_ids: [0], target_category_id: 0, value_text: '', condition_group: group });
                         setIsCondModalOpen(true);
                       }} className="text-amber-600 text-xs font-medium hover:text-amber-800 hover:underline inline-flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">add</span>Thêm điều kiện (VÀ)</button>
                     </div>
@@ -268,7 +301,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
           <div className="mt-4 pt-4 border-t border-amber-200 text-center">
              <button onClick={() => {
                 setSelectedRule(rule);
-                setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_id: 0, target_category_id: 0, value_text: '', condition_group: maxGroup + 1 });
+                setCondForm({ criteria_type: rule.is_exclusive_rule ? 'SERVICE_SELECTED' : 'TOTAL_BILL', operator: 'GTE', value_num: 0, target_service_ids: [0], target_category_id: 0, value_text: '', condition_group: maxGroup + 1 });
                 setIsCondModalOpen(true);
               }} className="text-amber-700 text-xs font-medium hover:bg-amber-200 bg-amber-100 px-3 py-1.5 rounded-lg inline-flex items-center gap-1 shadow-sm transition-colors border border-amber-200">
                <span className="material-symbols-outlined text-[16px]">add_circle</span>
@@ -431,13 +464,39 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
 
               {condForm.criteria_type === 'SERVICE_SELECTED' && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Chọn Dịch Vụ</label>
-                  <SearchableSelect
-                    options={services.map(s => ({ value: s.id, label: `${s.item_name} - ${Number(s.service_prices?.[0]?.base_price || 0).toLocaleString()}đ` }))}
-                    value={condForm.target_service_id}
-                    onChange={(val) => setCondForm({ ...condForm, target_service_id: Number(val) })}
-                    placeholder="-- Tìm và chọn dịch vụ --"
-                  />
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium">Chọn Dịch Vụ</label>
+                    <button type="button" onClick={() => setCondForm({ ...condForm, target_service_ids: [...condForm.target_service_ids, 0] })} className="text-amber-600 text-xs font-medium hover:underline flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">add</span>Thêm dịch vụ khác
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                    {condForm.target_service_ids.map((val, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <SearchableSelect
+                            options={services.map(s => ({ value: s.id, label: `${s.item_name} - ${Number(s.service_prices?.[0]?.base_price || 0).toLocaleString()}đ` }))}
+                            value={val}
+                            onChange={(newVal) => {
+                              const newArr = [...condForm.target_service_ids];
+                              newArr[index] = Number(newVal);
+                              setCondForm({ ...condForm, target_service_ids: newArr });
+                            }}
+                            placeholder="-- Tìm và chọn dịch vụ --"
+                          />
+                        </div>
+                        {condForm.target_service_ids.length > 1 && (
+                          <button type="button" onClick={() => {
+                            const newArr = [...condForm.target_service_ids];
+                            newArr.splice(index, 1);
+                            setCondForm({ ...condForm, target_service_ids: newArr });
+                          }} className="w-10 h-10 shrink-0 flex items-center justify-center text-slate-400 hover:text-error bg-slate-50 hover:bg-error/10 rounded-xl border border-slate-200 transition-colors">
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
