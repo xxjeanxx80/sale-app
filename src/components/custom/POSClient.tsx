@@ -5,6 +5,7 @@ import { getServices } from '@/app/actions/services';
 import { getCombos } from '@/app/actions/combos';
 import { getCustomers } from '@/app/actions/customers';
 import { calculateInvoice, checkout } from '@/app/actions/pos';
+import { getRecommendations, Recommendation } from '@/app/actions/recommendations';
 import { getDoctors } from '@/app/actions/employees';
 import CustomerModal from './CustomerModal';
 import CheckoutModal from './CheckoutModal';
@@ -16,6 +17,9 @@ export default function POSClient() {
   const [catalogSearch, setCatalogSearch] = useState('');
   const [services, setServices] = useState<any[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // States for Right Panel (Cart & Customer)
   const [customers, setCustomers] = useState<any[]>([]);
@@ -32,6 +36,7 @@ export default function POSClient() {
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
   const [appliedPromotions, setAppliedPromotions] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -41,28 +46,52 @@ export default function POSClient() {
     return () => clearInterval(timer);
   }, []);
   
+  // Reset page when tab or search changes
+  useEffect(() => {
+    setPage(1);
+    setServices([]);
+    setHasMore(true);
+  }, [activeTab, catalogSearch]);
+
   useEffect(() => {
     const fetchCatalogAndDocs = async () => {
-      setLoadingCatalog(true);
+      if (page === 1) setLoadingCatalog(true);
+      else setIsLoadingMore(true);
+
       try {
-        const docs = await getDoctors();
-        setDoctors(docs);
+        if (doctors.length === 0) {
+          const docs = await getDoctors();
+          setDoctors(docs);
+        }
+        
         if (activeTab === 'SERVICES') {
-          const res = await getServices(1, 50, catalogSearch);
-          setServices(res.services);
+          const res = await getServices(page, 20, catalogSearch);
+          setServices(prev => page === 1 ? res.services : [...prev, ...res.services]);
+          setHasMore(res.services.length === 20);
         } else {
           const res = await getCombos(catalogSearch);
           setServices(res);
+          setHasMore(false);
         }
       } catch (err) {
         console.error(err);
       } finally {
         setLoadingCatalog(false);
+        setIsLoadingMore(false);
       }
     };
     const timer = setTimeout(fetchCatalogAndDocs, 300);
     return () => clearTimeout(timer);
-  }, [activeTab, catalogSearch]);
+  }, [activeTab, catalogSearch, page]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 50) {
+      if (hasMore && !loadingCatalog && !isLoadingMore) {
+        setPage(prev => prev + 1);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchCus = async () => {
@@ -131,6 +160,7 @@ export default function POSClient() {
         setTotalDiscount(0);
         setFinalTotal(0);
         setAppliedPromotions([]);
+        setRecommendations([]);
         return;
       }
       try {
@@ -140,9 +170,13 @@ export default function POSClient() {
         setFinalTotal(res.finalTotal);
         setAppliedPromotions(res.appliedPromotions || []);
         
-        // Update cart items with evaluated discounts if needed
-        // For simplicity, we just update the visual totals.
+        // Calculate specific discounts to pass to recommendations
+        const specificDiscount = res.evaluatedCartItems.reduce((sum, item: any) => sum + item.discount_amount, 0);
+        const currentTotalAfterSpecific = res.subTotal - specificDiscount;
         
+        // Fetch recommendations
+        const recs = await getRecommendations(cartItems, currentTotalAfterSpecific);
+        setRecommendations(recs);
       } catch (err) {
         console.error("Calculate Error", err);
       }
@@ -228,8 +262,8 @@ export default function POSClient() {
         </div>
 
         {/* Product Grid */}
-        <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30">
-          {loadingCatalog ? (
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30" onScroll={handleScroll}>
+          {loadingCatalog && page === 1 ? (
             <div className="flex items-center justify-center h-full text-slate-400">
               <span className="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
             </div>
@@ -239,25 +273,33 @@ export default function POSClient() {
               <p>Không tìm thấy sản phẩm nào</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-              {services.map(item => (
-                <div 
-                  key={item.id} 
-                  onClick={() => addToCart(item, activeTab === 'SERVICES' ? 'SERVICE' : 'COMBO')}
-                  className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all cursor-pointer flex flex-col group active:scale-95"
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
-                    <span className="material-symbols-outlined">{activeTab === 'SERVICES' ? 'medical_services' : 'card_giftcard'}</span>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {services.map(item => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => addToCart(item, activeTab === 'SERVICES' ? 'SERVICE' : 'COMBO')}
+                    className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all cursor-pointer flex flex-col group active:scale-95"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                      <span className="material-symbols-outlined">{activeTab === 'SERVICES' ? 'medical_services' : 'card_giftcard'}</span>
+                    </div>
+                    <h4 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-1 flex-1">
+                      {activeTab === 'SERVICES' ? item.item_name : item.combo_name}
+                    </h4>
+                    <div className="text-primary font-bold text-[13px] sm:text-sm truncate mt-auto">
+                      {formatCurrency(activeTab === 'SERVICES' ? item.service_prices?.[0]?.base_price || 0 : item.combo_price || 0)}
+                    </div>
                   </div>
-                  <h4 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-1 flex-1">
-                    {activeTab === 'SERVICES' ? item.item_name : item.combo_name}
-                  </h4>
-                  <div className="text-primary font-bold text-[13px] sm:text-sm truncate mt-auto">
-                    {formatCurrency(activeTab === 'SERVICES' ? item.service_prices?.[0]?.base_price || 0 : item.combo_price || 0)}
-                  </div>
+                ))}
+              </div>
+              
+              {isLoadingMore && (
+                <div className="flex justify-center items-center p-4 mt-2">
+                   <span className="material-symbols-outlined animate-spin text-primary text-2xl">progress_activity</span>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -379,6 +421,29 @@ export default function POSClient() {
             </div>
           )}
         </div>
+
+        {/* Smart Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="p-3 bg-amber-50/50 border-t border-amber-100/50 shrink-0">
+            <div className="flex items-center gap-1.5 mb-2 text-amber-600 font-semibold text-xs uppercase tracking-wider">
+              <span className="material-symbols-outlined text-[16px] text-amber-500">lightbulb</span>
+              Lời khuyên thông minh
+            </div>
+            <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+              {recommendations.map(rec => (
+                <div key={rec.id} className="bg-white rounded-lg p-2.5 border border-amber-100 shadow-sm flex items-start gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
+                    {rec.type === 'PROMO' ? 'local_offer' : 'swap_horiz'}
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold text-slate-700">{rec.title}</div>
+                    <div className="text-xs text-slate-600 leading-snug">{rec.message}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Footer Summary */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/80 shrink-0">
