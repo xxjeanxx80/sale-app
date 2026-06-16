@@ -26,6 +26,16 @@ function evaluateCondition(cond: any, context: any) {
       return compare(context.groupSize || 1, Number(cond.value_num || 1));
     case 'SERVICE_SELECTED':
       return context.item && context.item.id === cond.target_service_id;
+    case 'COMBINED_SERVICE_VALUE': {
+      if (!context.cartItems || !context.item) return false;
+      let otherTotal = 0;
+      context.cartItems.forEach((cartItem: any) => {
+        if (cartItem.id !== context.item.id || cartItem.type !== context.item.type) {
+           otherTotal += cartItem.price * cartItem.quantity;
+        }
+      });
+      return compare(otherTotal, Number(cond.value_num || 0));
+    }
     case 'DOCTOR_SELECTED':
       return context.item && context.item.doctor_id === Number(cond.value_num);
     case 'CUSTOMER_TYPE':
@@ -128,7 +138,7 @@ export async function calculateInvoice(
   // 2. Evaluate cart items for Specific Rules
   const evaluatedCartItems = cartItems.map(item => {
     let itemDiscount = 0;
-    const context = { subTotal, item, customer };
+    const context = { subTotal, item, customer, cartItems };
     
     specificRules.forEach(rule => {
       if (evaluateRule(rule, context)) {
@@ -162,7 +172,8 @@ export async function calculateInvoice(
   });
 
   // 3. Evaluate Global Rules (on the whole bill)
-  const globalContext = { subTotal, customer };
+  const currentTotalAfterSpecific = subTotal - totalDiscount;
+  const globalContext = { subTotal: currentTotalAfterSpecific, customer };
   
   const promoGlobalRules: Record<number, { rule: any, discount: number, giftText: string }[]> = {};
 
@@ -174,9 +185,10 @@ export async function calculateInvoice(
         if (reward.reward_type === 'DISCOUNT_FIXED' || reward.reward_type === 'FIXED_PRICE') {
           currentRuleDiscount += Number(reward.reward_value || 0);
         } else if (reward.reward_type === 'FIXED_PRICE_PER_ITEM') {
-          currentRuleDiscount += Number(reward.reward_value || 0) * subTotal;
+          const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+          currentRuleDiscount += Number(reward.reward_value || 0) * totalItems;
         } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
-          currentRuleDiscount += subTotal * (Number(reward.reward_value || 0) / 100);
+          currentRuleDiscount += currentTotalAfterSpecific * (Number(reward.reward_value || 0) / 100);
         } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
           giftText = reward.gift_description || 'Quà tặng';
         }

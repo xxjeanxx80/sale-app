@@ -60,6 +60,16 @@ export default function SearchableSelect({ options, value, onChange, placeholder
                 placeholder="Gõ tên để tìm nhanh..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (filteredOptions.length > 0) {
+                      onChange(filteredOptions[0].value);
+                      setIsOpen(false);
+                      setSearchTerm('');
+                    }
+                  }
+                }}
                 autoFocus
               />
             </div>

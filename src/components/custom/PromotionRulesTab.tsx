@@ -33,7 +33,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
 
   // Rule
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
-  const [ruleForm, setRuleForm] = useState({ id: 0, rule_name: '', is_exclusive_rule: false, max_applications: '' as number | string });
+  const [ruleForm, setRuleForm] = useState({ id: 0, rule_name: '', is_exclusive_rule: false, is_stackable_with_others: true, max_applications: '' as number | string });
   const [expandedRules, setExpandedRules] = useState<Set<number>>(new Set());
 
   const toggleRule = (id: number) => {
@@ -185,6 +185,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
       case 'SERVICE_SELECTED':
         const s = services.find(x => x.id === cond.target_service_id);
         return `Mua Dịch vụ: ${s ? s.item_name : cond.target_service_id}`;
+      case 'COMBINED_SERVICE_VALUE': return `Dịch vụ khác có giá ${opStr} ${Number(cond.value_num).toLocaleString()}đ`;
       case 'CUSTOMER_TYPE': return `Hạng khách hàng ${opStr} ${cond.value_text}`;
       case 'DAY_OF_WEEK': return `Ngày trong tuần: ${cond.value_text}`;
       case 'CUSTOMER_ATTRIBUTE':
@@ -433,6 +434,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
                   {selectedRule?.is_exclusive_rule ? (
                     <>
                       <option value="SERVICE_SELECTED">Khách có chọn Dịch vụ cụ thể này</option>
+                      <option value="COMBINED_SERVICE_VALUE">Có Dịch vụ khác với tổng tiền (VNĐ)</option>
                     </>
                   ) : (
                     <>
@@ -447,7 +449,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
               </div>
 
               {/* Dynamic Fields based on Criteria */}
-              {['TOTAL_BILL', 'GROUP_SIZE'].includes(condForm.criteria_type) && (
+              {['TOTAL_BILL', 'GROUP_SIZE', 'COMBINED_SERVICE_VALUE'].includes(condForm.criteria_type) && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Toán tử</label>
@@ -474,7 +476,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
                       <span className="material-symbols-outlined text-[14px]">add</span>Thêm dịch vụ khác
                     </button>
                   </div>
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-2 pr-1">
                     {condForm.target_service_ids.map((val, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <div className="flex-1">
