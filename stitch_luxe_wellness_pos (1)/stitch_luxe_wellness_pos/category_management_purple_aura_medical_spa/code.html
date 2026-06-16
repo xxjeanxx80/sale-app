@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Category Management - Aura Medical Spa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Newsreader:opsz,wght@6..72,400;500;600&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#6a5d9e",
+                "inverse-surface": "#2d2a5b",
+                "on-primary-fixed": "#25005a",
+                "on-tertiary": "#ffffff",
+                "surface-dim": "#dad6ff",
+                "surface-container-low": "#f6f2ff",
+                "on-secondary": "#ffffff",
+                "inverse-on-surface": "#f3eeff",
+                "error-container": "#ffdad6",
+                "secondary-fixed": "#e5e2dd",
+                "primary-container": "#7c3aed",
+                "primary-fixed": "#eaddff",
+                "on-error-container": "#93000a",
+                "error": "#ba1a1a",
+                "surface": "#fcf8ff",
+                "on-tertiary-fixed": "#1e0e4e",
+                "on-secondary-container": "#656461",
+                "surface-container-lowest": "#ffffff",
+                "surface-bright": "#fcf8ff",
+                "on-secondary-fixed": "#1c1c19",
+                "surface-tint": "#732ee4",
+                "surface-variant": "#e3dfff",
+                "tertiary-fixed": "#e7deff",
+                "secondary": "#5f5e5b",
+                "secondary-fixed-dim": "#c9c6c2",
+                "tertiary-fixed-dim": "#ccbeff",
+                "on-tertiary-fixed-variant": "#4a3d7c",
+                "secondary-container": "#e5e2dd",
+                "on-secondary-fixed-variant": "#474743",
+                "outline-variant": "#ccc3d8",
+                "tertiary": "#524584",
+                "on-tertiary-container": "#eae1ff",
+                "inverse-primary": "#d2bbff",
+                "primary-fixed-dim": "#d2bbff",
+                "background": "#fcf8ff",
+                "on-primary": "#ffffff",
+                "surface-container-highest": "#e3dfff",
+                "surface-container": "#efebff",
+                "on-primary-container": "#ede0ff",
+                "outline": "#7b7487",
+                "on-primary-fixed-variant": "#5a00c6",
+                "on-background": "#181445",
+                "surface-container-high": "#e9e5ff",
+                "primary": "#630ed4",
+                "on-surface": "#181445",
+                "on-surface-variant": "#4a4455",
+                "on-error": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "24px",
+                "margin-mobile": "20px",
+                "container-max": "1280px",
+                "unit": "8px",
+                "margin-desktop": "64px"
+        },
+        "fontFamily": {
+                "display-lg": [
+                        "Newsreader"
+                ],
+                "display-lg-mobile": [
+                        "Newsreader"
+                ],
+                "headline-md": [
+                        "Newsreader"
+                ],
+                "body-md": [
+                        "Manrope"
+                ],
+                "label-md": [
+                        "Manrope"
+                ],
+                "headline-sm": [
+                        "Newsreader"
+                ],
+                "body-lg": [
+                        "Manrope"
+                ],
+                "label-sm": [
+                        "Manrope"
+                ],
+                "display": [
+                        "Newsreader"
+                ]
+        },
+        "fontSize": {
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg-mobile": [
+                        "36px",
+                        {
+                                "lineHeight": "42px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-sm": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "fontWeight": "500"
+                        }
+                ],
+                "display": [
+                        "48px",
+                        {
+                                "lineHeight": "1.1",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "1.2",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+  }
+  h1, h2, h3, .font-display, .font-headline-md, .font-headline-lg, .font-headline-sm {
+    font-family: 'Newsreader', serif;
+  }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 z-50 bg-surface-container-low border-r border-outline-variant/30 py-4 px-2">
+<div class="px-gutter mb-8 flex items-center gap-2">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+<div>
+<h1 class="font-headline-md text-xl font-bold text-primary">Aura Medical</h1>
+<p class="font-label-sm text-[10px] text-on-surface-variant">Premium Clinic Management</p>
+</div>
+</div>
+<div class="px-2 mb-6">
+<button class="w-full h-[44px] rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200">
+<span class="material-symbols-outlined">add</span>
+      New Appointment
+    </button>
+</div>
+<div class="flex-1 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+      POS
+    </a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+      Services
+    </a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md bg-primary text-on-primary shadow-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">category</span>
+      Categories
+    </a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+      Customers
+    </a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+      Settings
+    </a>
+</div>
+<div class="mt-auto flex flex-col gap-1 px-2 border-t border-outline-variant/30 pt-4">
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">support_agent</span>
+      Support
+    </a>
+<a class="flex items-center gap-3 px-gutter py-3 rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+      Logout
+    </a>
+</div>
+</nav>
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden flex justify-between items-center px-gutter h-16 w-full fixed top-0 z-40 bg-surface-container-low/80 backdrop-blur-md border-b border-outline-variant/30">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+<span class="font-headline-md text-lg font-bold text-primary">Aura</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-primary/10 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-primary/10 text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 pt-20 md:pt-0 p-margin-mobile md:p-margin-desktop min-h-screen bg-background relative overflow-hidden">
+<!-- Ambient Background Effect -->
+<div class="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
+<div class="absolute -top-[20%] -right-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-primary-container/20 to-transparent blur-3xl"></div>
+<div class="absolute top-[40%] -left-[10%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tr from-surface-tint/10 to-transparent blur-3xl"></div>
+</div>
+<div class="relative z-10 max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Category Management</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Organize and structure your clinic's service offerings. A clear hierarchy ensures a smooth booking experience for your patients and efficient POS navigation.</p>
+</div>
+<div class="flex gap-3">
+<button class="h-[44px] px-gutter rounded-xl bg-transparent border border-outline-variant text-on-surface font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+  Filter
+</button>
+<button class="h-[44px] px-gutter rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow">
+<span class="material-symbols-outlined text-[20px]">add</span>
+  Add Category
+</button>
+</div>
+</div>
+<!-- Bento Grid Layout for Categories -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Main Categories Table Card -->
+<div class="lg:col-span-8 xl:col-span-9 bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-low overflow-hidden flex flex-col backdrop-blur-sm bg-white/90">
+<div class="px-gutter py-6 border-b border-surface-container-highest flex justify-between items-center bg-surface-bright/50">
+<h3 class="font-headline-md text-2xl text-on-surface">Service Hierarchy</h3>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="h-10 pl-10 pr-3 rounded-lg bg-surface-container-low border-none focus:ring-2 focus:ring-primary text-body-md font-body-md text-on-surface w-64 placeholder:text-on-surface-variant/60 transition-shadow" placeholder="Search categories..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-container-highest bg-surface-container-lowest/50">
+<th class="px-gutter py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold">Category Name</th>
+<th class="px-gutter py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold w-32">Level</th>
+<th class="px-gutter py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold w-32 text-right">Services</th>
+<th class="px-gutter py-3 font-label-sm text-label-sm text-on-surface-variant font-semibold w-24 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-surface-container-highest">
+<!-- Parent Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary transition-transform group-hover:scale-110">cut</span>
+<span class="font-semibold">Surgery</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-[11px] font-bold">PRIMARY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">12</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Child Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer bg-surface-bright/30">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3 ml-8">
+<div class="w-4 border-b-2 border-l-2 border-outline-variant/30 rounded-bl-lg h-6 -mt-4 mr-2"></div>
+<span class="text-on-surface">Nose (Rhinoplasty)</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-[11px]">SUB-CATEGORY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">4</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Child Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer bg-surface-bright/30">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3 ml-8">
+<div class="w-4 border-b-2 border-l-2 border-outline-variant/30 rounded-bl-lg h-6 -mt-4 mr-2"></div>
+<span class="text-on-surface">Face (Facelift)</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-[11px]">SUB-CATEGORY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">3</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Parent Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary transition-transform group-hover:scale-110">vaccines</span>
+<span class="font-semibold">Injectables</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-[11px] font-bold">PRIMARY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">8</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Child Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer bg-surface-bright/30">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3 ml-8">
+<div class="w-4 border-b-2 border-l-2 border-outline-variant/30 rounded-bl-lg h-6 -mt-4 mr-2"></div>
+<span class="text-on-surface">Neuromodulators (Botox)</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-[11px]">SUB-CATEGORY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">2</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Parent Category -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group cursor-pointer">
+<td class="px-gutter py-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary transition-transform group-hover:scale-110">spa</span>
+<span class="font-semibold">Skin Care &amp; Lasers</span>
+</div>
+</td>
+<td class="px-gutter py-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-[11px] font-bold">PRIMARY</span>
+</td>
+<td class="px-gutter py-6 text-right text-on-surface-variant">15</td>
+<td class="px-gutter py-6 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Side Panel (Quick Stats / Suggestions) -->
+<div class="lg:col-span-4 xl:col-span-3 flex flex-col gap-gutter">
+<!-- Stats Glass Card -->
+<div class="bg-surface-container-lowest/80 backdrop-blur-md rounded-xl shadow-md border border-surface-container-highest p-gutter">
+<h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-4">Overview</h4>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container-low p-4 rounded-xl">
+<div class="font-display text-4xl text-primary">5</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant mt-1 uppercase">Primary</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl">
+<div class="font-display text-4xl text-primary">18</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant mt-1 uppercase">Sub-Cats</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl col-span-2">
+<div class="font-display text-4xl text-on-surface">35</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant mt-1 uppercase">Total Active Services</div>
+</div>
+</div>
+</div>
+<!-- Informational Card -->
+<div class="bg-primary-container/10 rounded-xl p-gutter border border-primary-container/20 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 text-primary-container/20">
+<span class="material-symbols-outlined text-[100px]" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-1.5 text-primary mb-2">
+<span class="material-symbols-outlined text-[20px]">tips_and_updates</span>
+<h4 class="font-label-md text-label-md font-semibold">Best Practices</h4>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 leading-relaxed">Keep your hierarchy shallow. We recommend no more than two levels (Primary &gt; Sub-category) to ensure a seamless patient booking experience.</p>
+<a class="font-label-sm text-label-sm text-primary font-bold hover:underline flex items-center gap-1.5" href="#">Read documentation <span class="material-symbols-outlined text-[16px]">arrow_forward</span></a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
