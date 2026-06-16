@@ -20,7 +20,7 @@ export default async function Dashboard() {
       </div>
 
       {/* KPI Stats */}
-      <div className="grid gap-6 md:grid-cols-3 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
         {/* Services Card */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-outline-variant/10 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -62,12 +62,12 @@ export default async function Dashboard() {
       </div>
 
       {/* Quick Access Tools */}
-      <div className="grid gap-6 md:grid-cols-2 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
         <div className="bg-white rounded-2xl p-8 shadow-xl shadow-primary/5 border border-outline-variant/10 flex flex-col h-full">
           <h2 className="font-headline-lg text-on-surface mb-2">Công cụ truy cập nhanh</h2>
           <p className="text-on-surface-variant mb-8">Lựa chọn các chức năng dưới đây để bắt đầu làm việc</p>
           
-          <div className="grid gap-4 md:grid-cols-2 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             <Link 
               href="/services"
               className="flex flex-col p-6 rounded-xl border border-outline-variant/30 bg-surface-container hover:bg-surface-container-high hover:border-primary/50 transition-all group"

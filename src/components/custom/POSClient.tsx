@@ -27,6 +27,7 @@ export default function POSClient() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [doctors, setDoctors] = useState<any[]>([]);
   
   const [cartItems, setCartItems] = useState<any[]>([]);
@@ -37,7 +38,6 @@ export default function POSClient() {
   const [finalTotal, setFinalTotal] = useState(0);
   const [appliedPromotions, setAppliedPromotions] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -227,8 +227,19 @@ export default function POSClient() {
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
+  const formatTime = () => {
+    if (!currentTime) return '';
+    const hours = currentTime.getHours().toString().padStart(2, '0');
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+    const seconds = currentTime.getSeconds().toString().padStart(2, '0');
+    const day = currentTime.getDate().toString().padStart(2, '0');
+    const month = (currentTime.getMonth() + 1).toString().padStart(2, '0');
+    const year = currentTime.getFullYear();
+    return `${hours}:${minutes}:${seconds} - ${day}/${month}/${year}`;
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-6 pb-20 lg:pb-0">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans p-6 pb-20 lg:pb-0">
       
       {/* LEFT PANEL: CATALOG */}
       <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
@@ -274,7 +285,7 @@ export default function POSClient() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {services.map(item => (
                   <div 
                     key={item.id} 

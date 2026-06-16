@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
+import { loginWithPhone } from '@/app/actions/auth';
 
 const MENU_ITEMS = [
   { title: 'POS / Tính tiền', href: '/pos', icon: 'point_of_sale' },
@@ -18,6 +19,103 @@ const MENU_ITEMS = [
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Auth States
+  const [loggedInEmployee, setLoggedInEmployee] = useState<any>(null);
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Check saved session
+  useEffect(() => {
+    const savedUser = localStorage.getItem('pos_user');
+    if (savedUser) {
+      try {
+        setLoggedInEmployee(JSON.parse(savedUser));
+      } catch (e) {}
+    }
+    setIsCheckingSession(false);
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setIsLoggingIn(true);
+    
+    try {
+      const res = await loginWithPhone(loginPhone);
+      if (res.success && res.user) {
+        setLoggedInEmployee(res.user);
+        localStorage.setItem('pos_user', JSON.stringify(res.user));
+      } else {
+        setLoginError(res.message || 'Lỗi đăng nhập');
+      }
+    } catch (err) {
+      setLoginError('Lỗi kết nối máy chủ');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setLoggedInEmployee(null);
+    localStorage.removeItem('pos_user');
+    setLoginPhone('');
+  };
+
+  if (isCheckingSession) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+      </div>
+    );
+  }
+
+  if (!loggedInEmployee) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-50 flex items-center justify-center p-4">
+         <div className="bg-white rounded-3xl shadow-xl w-[90%] max-w-[400px] min-w-[320px] overflow-hidden border border-slate-100">
+            <div className="bg-primary/5 p-8 text-center border-b border-primary/10">
+               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-primary/20">
+                 <span className="material-symbols-outlined text-4xl text-primary">point_of_sale</span>
+               </div>
+               <h2 className="text-2xl font-bold text-slate-800">Đăng nhập Hệ thống</h2>
+               <p className="text-slate-500 text-sm mt-2">Dành cho bộ phận Tư vấn viên (Sales)</p>
+            </div>
+            <form onSubmit={handleLogin} className="p-8 space-y-5">
+               <div>
+                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Số điện thoại</label>
+                 <div className="relative">
+                   <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">phone</span>
+                   <input 
+                     type="text" 
+                     value={loginPhone}
+                     onChange={e => setLoginPhone(e.target.value)}
+                     placeholder="Nhập số điện thoại nhân sự..."
+                     className="w-full border-slate-200 rounded-xl focus:ring-primary focus:border-primary py-3 pl-10 pr-4 bg-slate-50 focus:bg-white transition-colors text-slate-800"
+                     required
+                   />
+                 </div>
+               </div>
+               {loginError && (
+                 <div className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-xl border border-red-100 flex items-start gap-2">
+                   <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
+                   {loginError}
+                 </div>
+               )}
+               <button 
+                 type="submit" 
+                 disabled={isLoggingIn}
+                 className="w-full bg-primary hover:bg-primary-600 text-white font-semibold p-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-70 mt-2 active:scale-[0.98]"
+               >
+                 {isLoggingIn ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : 'Đăng nhập vào hệ thống'}
+               </button>
+            </form>
+         </div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-body-md text-body-md antialiased overflow-hidden bg-surface text-on-background h-screen">
@@ -37,10 +135,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="h-8 w-px bg-outline-variant/20"></div>
           <div className="flex items-center gap-3 cursor-pointer hover:bg-surface-container-high p-2 rounded-xl transition-colors">
+            <div className="flex flex-col text-right mr-1">
+               <span className="font-label-md text-on-surface">{loggedInEmployee.full_name}</span>
+               <span className="text-[10px] uppercase font-bold text-slate-500">{loggedInEmployee.role}</span>
+            </div>
             <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center bg-primary text-white">
               <span className="material-symbols-outlined text-[18px]">person</span>
             </div>
-            <span className="font-label-md text-on-surface">Admin</span>
           </div>
         </div>
       </header>
@@ -49,9 +150,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <nav className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-surface-container-low border-r border-outline-variant/20 flex flex-col z-50 transition-all duration-300`}>
         <div className="p-4 mb-4">
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-8 mt-2`}>
-            <div className={`flex items-center gap-3 ${isCollapsed ? 'hidden' : 'flex'}`}>
+            <Link href="/" className={`flex items-center gap-3 ${isCollapsed ? 'hidden' : 'flex'} hover:opacity-80 transition-opacity`}>
               <img src="/logos/logo-ngang.png" alt="Aura Logo" className="h-8 object-contain" />
-            </div>
+            </Link>
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="w-10 h-10 rounded-xl text-primary hover:bg-primary/10 flex items-center justify-center transition-colors shrink-0"
@@ -85,10 +186,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="material-symbols-outlined shrink-0">support_agent</span>
             {!isCollapsed && <span className="font-label-md truncate">Hỗ trợ</span>}
           </a>
-          <a href="#" className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? "Đăng xuất" : undefined}>
+          <button onClick={handleLogout} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? "Đăng xuất" : undefined}>
             <span className="material-symbols-outlined shrink-0">logout</span>
             {!isCollapsed && <span className="font-label-md truncate">Đăng xuất</span>}
-          </a>
+          </button>
         </div>
       </nav>
 
