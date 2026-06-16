@@ -210,3 +210,117 @@ export async function updatePromotionCategories(promotion_id: number, category_i
     return { success: false, error: error.message };
   }
 }
+
+export async function duplicatePromotion(id: number) {
+  try {
+    const originalPromo = await prisma.promotions.findUnique({
+      where: { id },
+      include: {
+        promo_rules: {
+          include: {
+            rule_conditions: true,
+            rule_rewards: true
+          }
+        },
+        promotion_branches: true,
+        promotion_categories: true
+      }
+    });
+
+    if (!originalPromo) {
+      return { success: false, error: 'Không tìm thấy khuyến mãi gốc.' };
+    }
+
+    const newPromo = await prisma.$transaction(async (tx) => {
+      // 1. Create the new promotion
+      const createdPromo = await tx.promotions.create({
+        data: {
+          promotion_name: `${originalPromo.promotion_name} (Bản sao)`,
+          promotion_type: originalPromo.promotion_type,
+          start_date: originalPromo.start_date,
+          end_date: originalPromo.end_date,
+          applicable_days: originalPromo.applicable_days,
+          max_discount_percent_cap: originalPromo.max_discount_percent_cap ? Number(originalPromo.max_discount_percent_cap) : null,
+          is_stackable: originalPromo.is_stackable,
+          description: originalPromo.description,
+          is_active: false, // Default to inactive for safety
+        }
+      });
+
+      // 2. Create branches
+      if (originalPromo.promotion_branches.length > 0) {
+        await tx.promotion_branches.createMany({
+          data: originalPromo.promotion_branches.map(b => ({
+            promotion_id: createdPromo.id,
+            branch_id: b.branch_id
+          }))
+        });
+      }
+
+      // 3. Create categories
+      if (originalPromo.promotion_categories.length > 0) {
+        await tx.promotion_categories.createMany({
+          data: originalPromo.promotion_categories.map(c => ({
+            promotion_id: createdPromo.id,
+            category_id: c.category_id
+          }))
+        });
+      }
+
+      // 4. Create rules, conditions, rewards
+      for (const rule of originalPromo.promo_rules) {
+        const createdRule = await tx.promo_rules.create({
+          data: {
+            promotion_id: createdPromo.id,
+            rule_name: rule.rule_name,
+            is_exclusive_rule: rule.is_exclusive_rule,
+            is_stackable_with_others: rule.is_stackable_with_others,
+            max_applications: rule.max_applications
+          }
+        });
+
+        if (rule.rule_conditions.length > 0) {
+          await tx.rule_conditions.createMany({
+            data: rule.rule_conditions.map(c => ({
+              rule_id: createdRule.id,
+              condition_group: c.condition_group,
+              criteria_type: c.criteria_type,
+              operator: c.operator,
+              value_num: c.value_num ? Number(c.value_num) : null,
+              value_num_max: c.value_num_max ? Number(c.value_num_max) : null,
+              value_text: c.value_text,
+              target_service_id: c.target_service_id,
+              target_category_id: c.target_category_id
+            }))
+          });
+        }
+
+        if (rule.rule_rewards.length > 0) {
+          await tx.rule_rewards.createMany({
+            data: rule.rule_rewards.map(r => ({
+              rule_id: createdRule.id,
+              reward_type: r.reward_type,
+              reward_value: r.reward_value ? Number(r.reward_value) : null,
+              target_service_id: r.target_service_id,
+              gift_description: r.gift_description,
+              voucher_duration_days: r.voucher_duration_days,
+              installment_months: r.installment_months,
+              installment_rate: r.installment_rate ? Number(r.installment_rate) : null,
+              recurring_interval_months: r.recurring_interval_months
+            }))
+          });
+        }
+      }
+
+      return createdPromo;
+    }, {
+      maxWait: 5000,
+      timeout: 15000
+    });
+
+    return { success: true, data: serializePrisma(newPromo) };
+  } catch (error: any) {
+    console.error('Error duplicating promotion:', error);
+    return { success: false, error: error.message };
+  }
+}

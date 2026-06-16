@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getPromotions, deletePromotion } from '@/app/actions/promotions';
+import { getPromotions, deletePromotion, duplicatePromotion } from '@/app/actions/promotions';
 import PromotionModal from '@/components/custom/PromotionModal';
 import { useRouter } from 'next/navigation';
 
@@ -48,6 +48,17 @@ export default function PromotionTable() {
 
   const handleEdit = (promo: any) => {
     router.push(`/promotions/${promo.id}`);
+  };
+
+  const handleDuplicate = async (id: number) => {
+    if (confirm('Tạo một bản sao của chương trình khuyến mãi này? (Bản sao sẽ mặc định ở trạng thái Tắt)')) {
+      const res = await duplicatePromotion(id);
+      if (res.success) {
+        setRefreshKey(k => k + 1);
+      } else {
+        alert(res.error);
+      }
+    }
   };
 
   const handleAdd = () => {
@@ -179,10 +190,13 @@ export default function PromotionTable() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleEdit(promo)} className="w-8 h-8 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-colors border border-transparent hover:border-primary/20">
+                      <button onClick={() => handleDuplicate(promo.id)} className="w-8 h-8 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-100 flex items-center justify-center transition-colors border border-transparent hover:border-amber-200" title="Tạo bản sao">
+                        <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                      </button>
+                      <button onClick={() => handleEdit(promo)} className="w-8 h-8 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-colors border border-transparent hover:border-primary/20" title="Chỉnh sửa">
                         <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
-                      <button onClick={() => handleDelete(promo.id)} className="w-8 h-8 rounded-lg text-slate-500 hover:text-error hover:bg-error/10 flex items-center justify-center transition-colors border border-transparent hover:border-error/20">
+                      <button onClick={() => handleDelete(promo.id)} className="w-8 h-8 rounded-lg text-slate-500 hover:text-error hover:bg-error/10 flex items-center justify-center transition-colors border border-transparent hover:border-error/20" title="Xóa">
                         <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </div>
