@@ -31,7 +31,7 @@ export default function POSClient() {
   const [subTotal, setSubTotal] = useState(0);
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
-  const [appliedPromotions, setAppliedPromotions] = useState<string[]>([]);
+  const [appliedPromotions, setAppliedPromotions] = useState<any[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -394,8 +394,13 @@ export default function POSClient() {
               </span>
               <div className="text-right">
                 <span className="text-emerald-600 font-semibold block">- {formatCurrency(totalDiscount)}</span>
-                {appliedPromotions.length > 0 && appliedPromotions.map((p, i) => (
-                  <span key={i} className="text-emerald-500/80 text-[11px] italic block">{p}</span>
+                {appliedPromotions.length > 0 && appliedPromotions.map((p: any, i: number) => (
+                  <div key={i} className="flex justify-end gap-3 text-emerald-500/90 text-[12px] italic mt-1.5 items-start">
+                    <span className="text-right flex-1 leading-snug">{p.name} {p.giftText ? `(Tặng: ${p.giftText})` : ''}</span>
+                    <span className="font-semibold whitespace-nowrap">
+                      {p.amount > 0 ? `- ${formatCurrency(p.amount)}` : p.amount < 0 ? `+ ${formatCurrency(Math.abs(p.amount))}` : 'Quà tặng'}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>

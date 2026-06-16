@@ -80,12 +80,25 @@ export async function calculateInvoice(
   });
 
   let totalDiscount = 0;
+  const promoDiscountTotals: Record<number, number> = {};
   let customer = null;
   if (customerId) {
     customer = await prisma.customers.findUnique({ where: { id: customerId } });
   }
 
-  let appliedPromotions: string[] = [];
+  let appliedPromotions: { name: string, amount: number, giftText?: string }[] = [];
+
+  const addPromo = (name: string, amount: number, giftText?: string) => {
+    const existing = appliedPromotions.find(p => p.name === name);
+    if (existing) {
+      existing.amount += amount;
+      if (giftText && !existing.giftText?.includes(giftText)) {
+        existing.giftText = existing.giftText ? `${existing.giftText}, ${giftText}` : giftText;
+      }
+    } else {
+      appliedPromotions.push({ name, amount, giftText });
+    }
+  };
 
   // 1. Fetch active promotions and rules
   const now = new Date();
@@ -120,13 +133,21 @@ export async function calculateInvoice(
     specificRules.forEach(rule => {
       if (evaluateRule(rule, context)) {
         rule.rule_rewards.forEach((reward: any) => {
-          if (reward.reward_type === 'DISCOUNT_FIXED') {
-            itemDiscount += Number(reward.reward_value || 0);
+          let currentDiscount = 0;
+          let giftText = '';
+          if (reward.reward_type === 'DISCOUNT_FIXED' || reward.reward_type === 'FIXED_PRICE') {
+            currentDiscount = Number(reward.reward_value || 0);
+          } else if (reward.reward_type === 'FIXED_PRICE_PER_ITEM') {
+            currentDiscount = Number(reward.reward_value || 0) * item.quantity;
           } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
-            itemDiscount += (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);
+            currentDiscount = (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);
+          } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
+            giftText = reward.gift_description || 'Quà tặng';
           }
+          itemDiscount += currentDiscount;
           const promoDesc = `[${rule.promotion_name}] ${rule.rule_name}`;
-          if (!appliedPromotions.includes(promoDesc)) appliedPromotions.push(promoDesc);
+          addPromo(promoDesc, currentDiscount, giftText);
+          promoDiscountTotals[rule.promotion_id] = (promoDiscountTotals[rule.promotion_id] || 0) + currentDiscount;
         });
       }
     });
@@ -142,22 +163,66 @@ export async function calculateInvoice(
 
   // 3. Evaluate Global Rules (on the whole bill)
   const globalContext = { subTotal, customer };
-  let globalDiscount = 0;
+  
+  const promoGlobalRules: Record<number, { rule: any, discount: number, giftText: string }[]> = {};
+
   globalRules.forEach(rule => {
     if (evaluateRule(rule, globalContext)) {
+      let currentRuleDiscount = 0;
+      let giftText = '';
       rule.rule_rewards.forEach((reward: any) => {
-        if (reward.reward_type === 'DISCOUNT_FIXED') {
-          globalDiscount += Number(reward.reward_value || 0);
+        if (reward.reward_type === 'DISCOUNT_FIXED' || reward.reward_type === 'FIXED_PRICE') {
+          currentRuleDiscount += Number(reward.reward_value || 0);
+        } else if (reward.reward_type === 'FIXED_PRICE_PER_ITEM') {
+          currentRuleDiscount += Number(reward.reward_value || 0) * subTotal;
         } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
-          globalDiscount += subTotal * (Number(reward.reward_value || 0) / 100);
+          currentRuleDiscount += subTotal * (Number(reward.reward_value || 0) / 100);
+        } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
+          giftText = reward.gift_description || 'Quà tặng';
         }
-        const promoDesc = `[${rule.promotion_name}] ${rule.rule_name}`;
-        if (!appliedPromotions.includes(promoDesc)) appliedPromotions.push(promoDesc);
       });
+      if (!promoGlobalRules[rule.promotion_id]) promoGlobalRules[rule.promotion_id] = [];
+      promoGlobalRules[rule.promotion_id].push({ rule, discount: currentRuleDiscount, giftText });
     }
   });
 
-  totalDiscount += globalDiscount;
+  // Apply global rules with stackable logic
+  for (const promoIdStr of Object.keys(promoGlobalRules)) {
+    const promoId = Number(promoIdStr);
+    const evaluated = promoGlobalRules[promoId];
+    
+    // Sort by discount descending
+    evaluated.sort((a, b) => b.discount - a.discount);
+    
+    let rulesToApply = [];
+    const bestUnstackable = evaluated.find(e => e.rule.is_stackable_with_others === false);
+    
+    if (bestUnstackable) {
+       rulesToApply = [evaluated[0]]; // Pick highest discount rule
+    } else {
+       rulesToApply = evaluated; // All are stackable
+    }
+
+    rulesToApply.forEach(e => {
+        totalDiscount += e.discount;
+        const promoDesc = `[${e.rule.promotion_name}] ${e.rule.rule_name}`;
+        addPromo(promoDesc, e.discount, e.giftText);
+        promoDiscountTotals[promoId] = (promoDiscountTotals[promoId] || 0) + e.discount;
+    });
+  }
+
+  // 4. Apply Promotion Caps
+  for (const promo of activePromos) {
+    const pid = promo.id;
+    if (promoDiscountTotals[pid] > 0 && promo.max_discount_percent_cap) {
+      const capAmount = subTotal * (Number(promo.max_discount_percent_cap) / 100);
+      if (promoDiscountTotals[pid] > capAmount) {
+        const excess = promoDiscountTotals[pid] - capAmount;
+        totalDiscount -= excess;
+        addPromo(`[${promo.promotion_name}] Vượt hạn mức giảm`, -excess);
+      }
+    }
+  }
 
   return {
     subTotal,

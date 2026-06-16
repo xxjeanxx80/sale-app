@@ -244,7 +244,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
             </div>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => { setRuleForm({ id: rule.id, rule_name: rule.rule_name, is_exclusive_rule: rule.is_exclusive_rule, max_applications: rule.max_applications || '' }); setIsRuleModalOpen(true); }} className="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
+            <button onClick={() => { setRuleForm({ id: rule.id, rule_name: rule.rule_name, is_exclusive_rule: rule.is_exclusive_rule, is_stackable_with_others: rule.is_stackable_with_others, max_applications: rule.max_applications || '' }); setIsRuleModalOpen(true); }} className="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
               <span className="material-symbols-outlined text-[18px]">edit</span>
             </button>
             <button onClick={() => handleDeleteRule(rule.id)} className="text-error p-2 hover:bg-error/10 rounded-lg transition-colors bg-white shadow-sm border border-slate-100">
@@ -349,7 +349,7 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
           {ruleType === 'GLOBAL' ? 'Quy tắc Chung (Áp dụng Toàn Hóa Đơn)' : ruleType === 'SPECIFIC' ? 'Quy tắc Riêng (Khuyến Mãi Theo Dịch Vụ)' : 'Cấu trúc Quy tắc Khuyến mãi'}
         </h3>
         <button onClick={() => {
-          setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC', max_applications: '' });
+          setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC', is_stackable_with_others: true, max_applications: '' });
           setIsRuleModalOpen(true);
         }} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
@@ -392,6 +392,10 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
                 <label className="block text-sm font-medium mb-1">Số suất (Giới hạn áp dụng)</label>
                 <input type="number" min="1" className="w-full h-11 px-4 border rounded-xl" placeholder="Không nhập nếu không giới hạn" value={ruleForm.max_applications} onChange={e => setRuleForm({ ...ruleForm, max_applications: e.target.value ? Number(e.target.value) : '' })} />
                 <p className="text-xs text-slate-500 mt-1">Để trống nếu muốn áp dụng không giới hạn số lượng suất.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="is_stackable" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" checked={ruleForm.is_stackable_with_others ?? true} onChange={e => setRuleForm({ ...ruleForm, is_stackable_with_others: e.target.checked })} />
+                <label htmlFor="is_stackable" className="text-sm font-medium">Cho phép cộng dồn với quy tắc khác</label>
               </div>
               {!ruleType && (
                 <div>
