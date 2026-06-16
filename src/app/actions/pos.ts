@@ -77,9 +77,6 @@ function evaluateRule(rule: any, context: any) {
   return false; // No group matched
 }
 
-/**
- * Calculate Discount based on cart items, customer and promo_rules engine.
- */
 export async function calculateInvoice(
   cartItems: any[],
   customerId: number | null
@@ -89,26 +86,10 @@ export async function calculateInvoice(
     subTotal += (item.price * item.quantity);
   });
 
-  let totalDiscount = 0;
-  const promoDiscountTotals: Record<number, number> = {};
   let customer = null;
   if (customerId) {
     customer = await prisma.customers.findUnique({ where: { id: customerId } });
   }
-
-  let appliedPromotions: { name: string, amount: number, giftText?: string }[] = [];
-
-  const addPromo = (name: string, amount: number, giftText?: string) => {
-    const existing = appliedPromotions.find(p => p.name === name);
-    if (existing) {
-      existing.amount += amount;
-      if (giftText && !existing.giftText?.includes(giftText)) {
-        existing.giftText = existing.giftText ? `${existing.giftText}, ${giftText}` : giftText;
-      }
-    } else {
-      appliedPromotions.push({ name, amount, giftText });
-    }
-  };
 
   // 1. Fetch active promotions and rules
   const now = new Date();
@@ -124,7 +105,9 @@ export async function calculateInvoice(
     }
   });
 
-  // Split into global vs specific rules
+  const promoMap = new Map();
+  activePromos.forEach(p => promoMap.set(p.id, p));
+
   const allRules: any[] = [];
   activePromos.forEach(promo => {
     promo.promo_rules.forEach(rule => {
@@ -135,9 +118,20 @@ export async function calculateInvoice(
   const globalRules = allRules.filter(r => !r.is_exclusive_rule);
   const specificRules = allRules.filter(r => r.is_exclusive_rule);
 
+  interface DiscountAction {
+    promotion_id: number;
+    promotion_name: string;
+    is_stackable: boolean;
+    rule_name: string;
+    amount: number;
+    giftText: string;
+    item_id?: number;
+    item_type?: string;
+  }
+  const discountActions: DiscountAction[] = [];
+
   // 2. Evaluate cart items for Specific Rules
-  const evaluatedCartItems = cartItems.map(item => {
-    let itemDiscount = 0;
+  cartItems.forEach(item => {
     const context = { subTotal, item, customer, cartItems };
     
     specificRules.forEach(rule => {
@@ -154,30 +148,38 @@ export async function calculateInvoice(
           } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
             giftText = reward.gift_description || 'Quà tặng';
           }
-          itemDiscount += currentDiscount;
-          const promoDesc = `[${rule.promotion_name}] ${rule.rule_name}`;
-          addPromo(promoDesc, currentDiscount, giftText);
-          promoDiscountTotals[rule.promotion_id] = (promoDiscountTotals[rule.promotion_id] || 0) + currentDiscount;
+          
+          discountActions.push({
+            promotion_id: rule.promotion_id,
+            promotion_name: rule.promotion_name,
+            is_stackable: promoMap.get(rule.promotion_id)?.is_stackable ?? true,
+            rule_name: rule.rule_name,
+            amount: currentDiscount,
+            giftText,
+            item_id: item.id,
+            item_type: item.type
+          });
         });
       }
     });
-
-    totalDiscount += itemDiscount;
-
-    return {
-      ...item,
-      discount_amount: itemDiscount,
-      final_price: item.price - (itemDiscount / item.quantity)
-    };
   });
 
-  // 3. Evaluate Global Rules (on the whole bill)
-  const currentTotalAfterSpecific = subTotal - totalDiscount;
-  const globalContext = { subTotal: currentTotalAfterSpecific, customer };
-  
-  const promoGlobalRules: Record<number, { rule: any, discount: number, giftText: string }[]> = {};
+  const specificDiscountPerPromo: Record<number, number> = {};
+  discountActions.forEach(a => {
+    specificDiscountPerPromo[a.promotion_id] = (specificDiscountPerPromo[a.promotion_id] || 0) + a.amount;
+  });
+
+  const totalSpecificStackable = discountActions.filter(a => a.is_stackable).reduce((sum, a) => sum + a.amount, 0);
+
+  // 3. Evaluate Global Rules
+  const globalActionsByPromo: Record<number, any[]> = {};
 
   globalRules.forEach(rule => {
+    const isStackable = promoMap.get(rule.promotion_id)?.is_stackable ?? true;
+    const specificDiscountToSubtract = isStackable ? totalSpecificStackable : (specificDiscountPerPromo[rule.promotion_id] || 0);
+    const currentTotalAfterSpecific = subTotal - specificDiscountToSubtract;
+    const globalContext = { subTotal: currentTotalAfterSpecific, customer };
+
     if (evaluateRule(rule, globalContext)) {
       let currentRuleDiscount = 0;
       let giftText = '';
@@ -193,48 +195,107 @@ export async function calculateInvoice(
           giftText = reward.gift_description || 'Quà tặng';
         }
       });
-      if (!promoGlobalRules[rule.promotion_id]) promoGlobalRules[rule.promotion_id] = [];
-      promoGlobalRules[rule.promotion_id].push({ rule, discount: currentRuleDiscount, giftText });
+      if (!globalActionsByPromo[rule.promotion_id]) globalActionsByPromo[rule.promotion_id] = [];
+      globalActionsByPromo[rule.promotion_id].push({ rule, discount: currentRuleDiscount, giftText });
     }
   });
 
-  // Apply global rules with stackable logic
-  for (const promoIdStr of Object.keys(promoGlobalRules)) {
+  // Apply promo rules with stackable_with_others logic inside each promotion
+  for (const promoIdStr of Object.keys(globalActionsByPromo)) {
     const promoId = Number(promoIdStr);
-    const evaluated = promoGlobalRules[promoId];
-    
-    // Sort by discount descending
+    const evaluated = globalActionsByPromo[promoId];
     evaluated.sort((a, b) => b.discount - a.discount);
     
-    let rulesToApply = [];
     const bestUnstackable = evaluated.find(e => e.rule.is_stackable_with_others === false);
-    
-    if (bestUnstackable) {
-       rulesToApply = [evaluated[0]]; // Pick highest discount rule
-    } else {
-       rulesToApply = evaluated; // All are stackable
-    }
+    const rulesToApply = bestUnstackable ? [evaluated[0]] : evaluated;
 
     rulesToApply.forEach(e => {
-        totalDiscount += e.discount;
-        const promoDesc = `[${e.rule.promotion_name}] ${e.rule.rule_name}`;
-        addPromo(promoDesc, e.discount, e.giftText);
-        promoDiscountTotals[promoId] = (promoDiscountTotals[promoId] || 0) + e.discount;
+      discountActions.push({
+        promotion_id: promoId,
+        promotion_name: e.rule.promotion_name,
+        is_stackable: promoMap.get(promoId)?.is_stackable ?? true,
+        rule_name: e.rule.rule_name,
+        amount: e.discount,
+        giftText: e.giftText
+      });
     });
   }
 
   // 4. Apply Promotion Caps
-  for (const promo of activePromos) {
-    const pid = promo.id;
-    if (promoDiscountTotals[pid] > 0 && promo.max_discount_percent_cap) {
+  const promoTotals: Record<number, number> = {};
+  discountActions.forEach(a => {
+    promoTotals[a.promotion_id] = (promoTotals[a.promotion_id] || 0) + a.amount;
+  });
+
+  activePromos.forEach(promo => {
+    if ((promoTotals[promo.id] || 0) > 0 && promo.max_discount_percent_cap) {
       const capAmount = subTotal * (Number(promo.max_discount_percent_cap) / 100);
-      if (promoDiscountTotals[pid] > capAmount) {
-        const excess = promoDiscountTotals[pid] - capAmount;
-        totalDiscount -= excess;
-        addPromo(`[${promo.promotion_name}] Vượt hạn mức giảm`, -excess);
+      if (promoTotals[promo.id] > capAmount) {
+        const excess = promoTotals[promo.id] - capAmount;
+        discountActions.push({
+          promotion_id: promo.id,
+          promotion_name: promo.promotion_name,
+          is_stackable: promo.is_stackable ?? true,
+          rule_name: 'Vượt hạn mức giảm',
+          amount: -excess,
+          giftText: ''
+        });
+        promoTotals[promo.id] -= excess;
       }
     }
+  });
+
+  // 5. Decide Winners: Stackable vs Unstackable Promotions
+  const stackableTotal = activePromos.filter(p => p.is_stackable !== false).reduce((sum, p) => sum + (promoTotals[p.id] || 0), 0);
+  
+  let bestUnstackablePromoId = -1;
+  let maxUnstackableTotal = 0;
+  activePromos.filter(p => p.is_stackable === false).forEach(p => {
+    if ((promoTotals[p.id] || 0) > maxUnstackableTotal) {
+      maxUnstackableTotal = promoTotals[p.id];
+      bestUnstackablePromoId = p.id;
+    }
+  });
+
+  const winningPromoIds = new Set<number>();
+  if (maxUnstackableTotal > stackableTotal) {
+    winningPromoIds.add(bestUnstackablePromoId);
+  } else {
+    activePromos.filter(p => p.is_stackable !== false).forEach(p => winningPromoIds.add(p.id));
   }
+
+  // 6. Build Final Results
+  const finalActions = discountActions.filter(a => winningPromoIds.has(a.promotion_id));
+
+  let totalDiscount = 0;
+  const appliedPromotions: { name: string, amount: number, giftText?: string }[] = [];
+  const addPromo = (name: string, amount: number, giftText?: string) => {
+    const existing = appliedPromotions.find(p => p.name === name);
+    if (existing) {
+      existing.amount += amount;
+      if (giftText && !existing.giftText?.includes(giftText)) {
+        existing.giftText = existing.giftText ? `${existing.giftText}, ${giftText}` : giftText;
+      }
+    } else {
+      appliedPromotions.push({ name, amount, giftText });
+    }
+  };
+
+  const evaluatedCartItems = cartItems.map(item => ({ ...item, discount_amount: 0, final_price: item.price }));
+
+  finalActions.forEach(a => {
+    totalDiscount += a.amount;
+    const promoDesc = `[${a.promotion_name}] ${a.rule_name}`;
+    addPromo(promoDesc, a.amount, a.giftText);
+
+    if (a.item_id && a.item_type) {
+      const cartItem = evaluatedCartItems.find(i => i.id === a.item_id && i.type === a.item_type);
+      if (cartItem) {
+        cartItem.discount_amount += a.amount;
+        cartItem.final_price = cartItem.price - (cartItem.discount_amount / cartItem.quantity);
+      }
+    }
+  });
 
   return {
     subTotal,
