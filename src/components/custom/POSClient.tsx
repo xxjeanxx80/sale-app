@@ -38,6 +38,7 @@ export default function POSClient() {
   const [finalTotal, setFinalTotal] = useState(0);
   const [appliedPromotions, setAppliedPromotions] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [isRecommendationsExpanded, setIsRecommendationsExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -436,23 +437,34 @@ export default function POSClient() {
         {/* Smart Recommendations */}
         {recommendations.length > 0 && (
           <div className="p-3 bg-amber-50/50 border-t border-amber-100/50 shrink-0">
-            <div className="flex items-center gap-1.5 mb-2 text-amber-600 font-semibold text-xs uppercase tracking-wider">
-              <span className="material-symbols-outlined text-[16px] text-amber-500">lightbulb</span>
-              Lời khuyên thông minh
-            </div>
-            <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-              {recommendations.map(rec => (
-                <div key={rec.id} className="bg-white rounded-lg p-2.5 border border-amber-100 shadow-sm flex items-start gap-2">
-                  <span className="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
-                    {rec.type === 'PROMO' ? 'local_offer' : 'swap_horiz'}
-                  </span>
-                  <div>
-                    <div className="text-xs font-bold text-slate-700">{rec.title}</div>
-                    <div className="text-xs text-slate-600 leading-snug">{rec.message}</div>
+            <button 
+              onClick={() => setIsRecommendationsExpanded(!isRecommendationsExpanded)}
+              className="w-full flex items-center justify-between text-amber-600 font-semibold text-xs uppercase tracking-wider group outline-none"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-amber-500 group-hover:scale-110 transition-transform">lightbulb</span>
+                Lời khuyên thông minh ({recommendations.length})
+              </div>
+              <span className={`material-symbols-outlined transition-transform duration-300 ${isRecommendationsExpanded ? 'rotate-180' : ''}`}>
+                expand_more
+              </span>
+            </button>
+            
+            {isRecommendationsExpanded && (
+              <div className="space-y-2 mt-3 max-h-[160px] overflow-y-auto pr-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                {recommendations.map(rec => (
+                  <div key={rec.id} className="bg-white rounded-lg p-2.5 border border-amber-100 shadow-sm flex items-start gap-2">
+                    <span className="material-symbols-outlined text-amber-500 text-[18px] shrink-0 mt-0.5">
+                      {rec.type === 'PROMO' ? 'local_offer' : 'swap_horiz'}
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-700">{rec.title}</div>
+                      <div className="text-xs text-slate-600 leading-snug">{rec.message}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
