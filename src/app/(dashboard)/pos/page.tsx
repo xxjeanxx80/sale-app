@@ -1,4 +1,4 @@
-import POSClient from '../../../components/custom/POSClient';
+import POSClientWrapper from '../../../components/custom/POSClientWrapper';
 
 export const metadata = {
   title: 'POS (Bán hàng) | Hệ thống quản lý',
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function POSPage() {
-  return <POSClient />;
+  return <POSClientWrapper />;
 }

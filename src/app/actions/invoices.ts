@@ -53,8 +53,8 @@ export async function getInvoices(
       totalCount,
       totalPages: Math.ceil(totalCount / pageSize),
     };
-  } catch (error) {
-    console.error('getInvoices error:', error);
+  } catch (error: any) {
+    console.error('getInvoices error:', error?.message || error, error?.stack);
     throw new Error('Failed to fetch invoices');
   }
 }
