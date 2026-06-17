@@ -81,65 +81,51 @@ export default function InvoiceTable() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto min-h-[400px]">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4">Mã HĐ</th>
-              <th className="px-6 py-4">Ngày tạo</th>
-              <th className="px-6 py-4">Khách hàng</th>
-              <th className="px-6 py-4 text-right">Tổng tiền</th>
-              <th className="px-6 py-4 text-right">Đã thanh toán</th>
-              <th className="px-6 py-4 text-center">Trạng thái</th>
-              <th className="px-6 py-4 text-center">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="text-center py-20">
-                  <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
-                </td>
-              </tr>
-            ) : invoices.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="text-center py-20 text-slate-500 font-medium">
-                  Không tìm thấy hóa đơn nào
-                </td>
-              </tr>
-            ) : (
-              invoices.map(inv => (
-                <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-700">#{inv.id}</td>
-                  <td className="px-6 py-4 text-slate-600">{formatDate(inv.created_at)}</td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-slate-800">{inv.customers?.full_name}</div>
-                    <div className="text-xs text-slate-500">{inv.customers?.phone_number}</div>
-                  </td>
-                  <td className="px-6 py-4 text-right font-semibold text-slate-800">{formatCurrency(inv.final_price)} ₫</td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={`font-semibold ${inv.amount_paid < inv.final_price ? 'text-amber-600' : 'text-emerald-600'}`}>
+      {/* Unified Grid View (1-2-3 Columns) */}
+      <div className="p-4 md:p-6 bg-slate-50/50 min-h-[400px]">
+        {loading ? (
+          <div className="flex justify-center py-20"><span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span></div>
+        ) : invoices.length === 0 ? (
+          <div className="text-center py-20 text-slate-500 font-medium">Không tìm thấy hóa đơn nào</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {invoices.map(inv => (
+              <div 
+                key={inv.id} 
+                className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4 hover:shadow-md hover:border-primary/40 cursor-pointer transition-all active:scale-[0.98] group" 
+                onClick={() => setSelectedInvoiceId(inv.id)}
+              >
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1">
+                    <div className="font-bold text-slate-800 text-base mb-1 group-hover:text-primary transition-colors">#{inv.id} - {inv.customers?.full_name}</div>
+                    <div className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">call</span>
+                      {inv.customers?.phone_number}
+                    </div>
+                    <div className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                      {formatDate(inv.created_at)}
+                    </div>
+                  </div>
+                  <div className="shrink-0">{getStatusBadge(inv.status)}</div>
+                </div>
+                
+                <div className="flex justify-between items-end border-t border-slate-100 pt-3 mt-auto">
+                  <div>
+                    <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">Tổng tiền</div>
+                    <div className="font-bold text-slate-800 text-base">{formatCurrency(inv.final_price)} ₫</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">Đã thanh toán</div>
+                    <div className={`font-bold text-base ${inv.amount_paid < inv.final_price ? 'text-amber-600' : 'text-emerald-600'}`}>
                       {formatCurrency(inv.amount_paid)} ₫
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {getStatusBadge(inv.status)}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <button 
-                      onClick={() => setSelectedInvoiceId(inv.id)}
-                      className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-colors mx-auto"
-                      title="Xem chi tiết"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">visibility</span>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pagination */}

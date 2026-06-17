@@ -49,42 +49,29 @@ function evaluateCondition(cond: any, context: any) {
   }
 }
 
-/**
- * Evaluate a rule with AND/OR logic using condition_group
- */
-function evaluateRule(rule: any, context: any) {
-  if (!rule.rule_conditions || rule.rule_conditions.length === 0) return true; // No conditions = always true
 
-  // Group conditions by condition_group
-  const groupedConditions = rule.rule_conditions.reduce((acc: any, cond: any) => {
-    const group = cond.condition_group || 1;
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(cond);
-    return acc;
-  }, {});
-
-  // OR across groups: At least one group must be true
-  const groupKeys = Object.keys(groupedConditions);
-  for (const key of groupKeys) {
-    const group = groupedConditions[key];
-    // AND within group: All conditions in this group must be true
-    const groupResult = group.every((cond: any) => evaluateCondition(cond, context));
-    if (groupResult) {
-      return true; // Found a matching group
-    }
-  }
-
-  return false; // No group matched
-}
 
 export async function calculateInvoice(
   cartItems: any[],
-  customerId: number | null
+  customerId: number | null,
+  applyPromotions: boolean = true
 ) {
   let subTotal = 0;
   cartItems.forEach(item => {
     subTotal += (item.price * item.quantity);
   });
+
+  const evaluatedCartItems = cartItems.map(i => ({ ...i, discount_amount: 0, final_price: i.price }));
+
+  if (!applyPromotions) {
+    return {
+      subTotal,
+      totalDiscount: 0,
+      finalTotal: subTotal,
+      appliedPromotions: [],
+      evaluatedCartItems
+    };
+  }
 
   let customer = null;
   if (customerId) {
@@ -125,44 +112,134 @@ export async function calculateInvoice(
     rule_name: string;
     amount: number;
     giftText: string;
-    item_id?: number;
-    item_type?: string;
+    consumed_items?: { id: number, qty: number }[];
   }
   const discountActions: DiscountAction[] = [];
 
-  // 2. Evaluate cart items for Specific Rules
-  cartItems.forEach(item => {
-    const context = { subTotal, item, customer, cartItems };
-    
-    specificRules.forEach(rule => {
-      if (evaluateRule(rule, context)) {
-        rule.rule_rewards.forEach((reward: any) => {
+  // 2. Evaluate Specific Rules (Combos) using Greedy Algorithm
+  let availableItems = cartItems.map(i => ({ ...i }));
+  
+  while (true) {
+    let bestRule: any = null;
+    let bestDiscount = 0;
+    let bestConsumed: { id: number, qty: number }[] = [];
+    let bestRewardText = '';
+
+    for (const rule of specificRules) {
+      const groupedConditions = rule.rule_conditions.reduce((acc: any, cond: any) => {
+        const group = cond.condition_group || 1;
+        if (!acc[group]) acc[group] = [];
+        acc[group].push(cond);
+        return acc;
+      }, {});
+
+      for (const groupKey of Object.keys(groupedConditions)) {
+        const group = groupedConditions[groupKey];
+        let tempItems = availableItems.map(i => ({ ...i }));
+        let consumed = new Map<number, number>();
+        let matched = true;
+
+        for (const cond of group) {
+          if (cond.criteria_type === 'SERVICE_SELECTED') {
+            const targetId = cond.target_service_id;
+            const found = tempItems.find(i => i.id === targetId && i.quantity > 0);
+            if (found) {
+              found.quantity -= 1;
+              consumed.set(targetId, (consumed.get(targetId) || 0) + 1);
+            } else {
+              matched = false; break;
+            }
+          } else if (cond.criteria_type === 'COMBINED_SERVICE_VALUE') {
+            const requiredValue = Number(cond.value_num || 0);
+            let currentValue = 0;
+            for (const item of tempItems) {
+              if (currentValue >= requiredValue) break;
+              while (item.quantity > 0 && currentValue < requiredValue) {
+                item.quantity -= 1;
+                currentValue += item.price;
+                consumed.set(item.id, (consumed.get(item.id) || 0) + 1);
+              }
+            }
+            if (currentValue < requiredValue) {
+              matched = false; break;
+            }
+          } else if (cond.criteria_type === 'CATEGORY_SELECTED') {
+            const targetCatId = cond.target_category_id;
+            const minQty = Number(cond.value_num || 1);
+            const maxQty = cond.value_num_max ? Number(cond.value_num_max) : Infinity;
+
+            let currentQty = 0;
+            for (const item of tempItems) {
+               if (item.category_id === targetCatId) {
+                  while (item.quantity > 0 && currentQty < maxQty) {
+                     item.quantity -= 1;
+                     currentQty += 1;
+                     consumed.set(item.id, (consumed.get(item.id) || 0) + 1);
+                  }
+               }
+            }
+            
+            if (currentQty < minQty) {
+               matched = false; break;
+            }
+          } else if (cond.criteria_type === 'TOTAL_BILL') {
+             if (subTotal < Number(cond.value_num || 0)) { matched = false; break; }
+          } else if (cond.criteria_type === 'CUSTOMER_TYPE') {
+             if (customer?.customer_type !== cond.value_text) { matched = false; break; }
+          }
+        }
+
+        if (matched) {
           let currentDiscount = 0;
           let giftText = '';
-          if (reward.reward_type === 'DISCOUNT_FIXED' || reward.reward_type === 'FIXED_PRICE') {
-            currentDiscount = Number(reward.reward_value || 0);
-          } else if (reward.reward_type === 'FIXED_PRICE_PER_ITEM') {
-            currentDiscount = Number(reward.reward_value || 0) * item.quantity;
-          } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
-            currentDiscount = (item.price * item.quantity) * (Number(reward.reward_value || 0) / 100);
-          } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
-            giftText = reward.gift_description || 'Quà tặng';
-          }
+          let consumedItemsList = Array.from(consumed.entries()).map(([id, qty]) => ({ id, qty }));
           
-          discountActions.push({
-            promotion_id: rule.promotion_id,
-            promotion_name: rule.promotion_name,
-            is_stackable: promoMap.get(rule.promotion_id)?.is_stackable ?? true,
-            rule_name: rule.rule_name,
-            amount: currentDiscount,
-            giftText,
-            item_id: item.id,
-            item_type: item.type
+          rule.rule_rewards.forEach((reward: any) => {
+            if (reward.reward_type === 'DISCOUNT_FIXED' || reward.reward_type === 'FIXED_PRICE') {
+              currentDiscount += Number(reward.reward_value || 0);
+            } else if (reward.reward_type === 'FIXED_PRICE_PER_ITEM') {
+              const totalConsumed = consumedItemsList.reduce((sum, ci) => sum + ci.qty, 0);
+              currentDiscount += Number(reward.reward_value || 0) * totalConsumed;
+            } else if (reward.reward_type === 'DISCOUNT_PERCENT') {
+              let consumedValue = 0;
+              consumedItemsList.forEach(ci => {
+                 const originalItem = cartItems.find(i => i.id === ci.id);
+                 if (originalItem) consumedValue += originalItem.price * ci.qty;
+              });
+              currentDiscount += consumedValue * (Number(reward.reward_value || 0) / 100);
+            } else if (['FREE_SERVICE', 'FREE_PRODUCT', 'CUSTOM_NOTE'].includes(reward.reward_type)) {
+              giftText = reward.gift_description || 'Quà tặng';
+            }
           });
-        });
+
+          if (currentDiscount > bestDiscount) {
+            bestDiscount = currentDiscount;
+            bestRule = rule;
+            bestConsumed = consumedItemsList;
+            bestRewardText = giftText;
+          }
+        }
       }
-    });
-  });
+    }
+
+    if (bestRule && bestDiscount > 0) {
+      discountActions.push({
+        promotion_id: bestRule.promotion_id,
+        promotion_name: bestRule.promotion_name,
+        is_stackable: promoMap.get(bestRule.promotion_id)?.is_stackable ?? true,
+        rule_name: bestRule.rule_name,
+        amount: bestDiscount,
+        giftText: bestRewardText,
+        consumed_items: bestConsumed
+      });
+      bestConsumed.forEach(ci => {
+        const found = availableItems.find(i => i.id === ci.id);
+        if (found) found.quantity -= ci.qty;
+      });
+    } else {
+      break;
+    }
+  }
 
   const specificDiscountPerPromo: Record<number, number> = {};
   discountActions.forEach(a => {
@@ -178,9 +255,33 @@ export async function calculateInvoice(
     const isStackable = promoMap.get(rule.promotion_id)?.is_stackable ?? true;
     const specificDiscountToSubtract = isStackable ? totalSpecificStackable : (specificDiscountPerPromo[rule.promotion_id] || 0);
     const currentTotalAfterSpecific = subTotal - specificDiscountToSubtract;
-    const globalContext = { subTotal: currentTotalAfterSpecific, customer };
+    // We recreate evaluateCondition globally for GLOBAL rules
+    const evaluateGlobalCondition = (cond: any) => {
+      if (cond.criteria_type === 'TOTAL_BILL') return currentTotalAfterSpecific >= Number(cond.value_num || 0);
+      if (cond.criteria_type === 'GROUP_SIZE') return true; // not implemented
+      if (cond.criteria_type === 'CUSTOMER_TYPE') return customer?.customer_type === cond.value_text;
+      if (cond.criteria_type === 'CUSTOMER_ATTRIBUTE') {
+        if (cond.value_text === 'FIRST_TIME') return customer?.customer_type === 'NEW';
+        return false;
+      }
+      return false;
+    };
 
-    if (evaluateRule(rule, globalContext)) {
+    const evaluateGlobalRule = (r: any) => {
+      if (!r.rule_conditions || r.rule_conditions.length === 0) return true;
+      const groups = r.rule_conditions.reduce((acc: any, c: any) => {
+        const g = c.condition_group || 1;
+        if (!acc[g]) acc[g] = [];
+        acc[g].push(c);
+        return acc;
+      }, {});
+      for (const g of Object.keys(groups)) {
+        if (groups[g].every((c: any) => evaluateGlobalCondition(c))) return true;
+      }
+      return false;
+    };
+
+    if (evaluateGlobalRule(rule)) {
       let currentRuleDiscount = 0;
       let giftText = '';
       rule.rule_rewards.forEach((reward: any) => {
@@ -281,19 +382,28 @@ export async function calculateInvoice(
     }
   };
 
-  const evaluatedCartItems = cartItems.map(item => ({ ...item, discount_amount: 0, final_price: item.price }));
 
   finalActions.forEach(a => {
     totalDiscount += a.amount;
     const promoDesc = `[${a.promotion_name}] ${a.rule_name}`;
     addPromo(promoDesc, a.amount, a.giftText);
 
-    if (a.item_id && a.item_type) {
-      const cartItem = evaluatedCartItems.find(i => i.id === a.item_id && i.type === a.item_type);
-      if (cartItem) {
-        cartItem.discount_amount += a.amount;
-        cartItem.final_price = cartItem.price - (cartItem.discount_amount / cartItem.quantity);
-      }
+    if (a.consumed_items) {
+      let totalConsumedValue = 0;
+      a.consumed_items.forEach((ci: any) => {
+         const cartItem = evaluatedCartItems.find((i: any) => i.id === ci.id);
+         if (cartItem) totalConsumedValue += cartItem.price * ci.qty;
+      });
+      
+      a.consumed_items.forEach((ci: any) => {
+         const cartItem = evaluatedCartItems.find((i: any) => i.id === ci.id);
+         if (cartItem && totalConsumedValue > 0) {
+            const proportion = (cartItem.price * ci.qty) / totalConsumedValue;
+            const discountForThisItem = a.amount * proportion;
+            cartItem.discount_amount += discountForThisItem;
+            cartItem.final_price = cartItem.price - (cartItem.discount_amount / cartItem.quantity);
+         }
+      });
     }
   });
 

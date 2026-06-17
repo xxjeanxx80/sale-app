@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { getServices } from '@/app/actions/services';
-import { getCombos } from '@/app/actions/combos';
 import { getCustomers } from '@/app/actions/customers';
 import { calculateInvoice, checkout } from '@/app/actions/pos';
 import { getRecommendations, Recommendation } from '@/app/actions/recommendations';
@@ -11,8 +10,6 @@ import CustomerModal from './CustomerModal';
 import CheckoutModal from './CheckoutModal';
 
 export default function POSClient() {
-  const [activeTab, setActiveTab] = useState<'SERVICES' | 'COMBOS'>('SERVICES');
-  
   // States for Left Panel (Catalog)
   const [catalogSearch, setCatalogSearch] = useState('');
   const [services, setServices] = useState<any[]>([]);
@@ -39,6 +36,7 @@ export default function POSClient() {
   const [appliedPromotions, setAppliedPromotions] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isRecommendationsExpanded, setIsRecommendationsExpanded] = useState(false);
+  const [autoPromo, setAutoPromo] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -47,12 +45,12 @@ export default function POSClient() {
     return () => clearInterval(timer);
   }, []);
   
-  // Reset page when tab or search changes
+  // Reset page when search changes
   useEffect(() => {
     setPage(1);
     setServices([]);
     setHasMore(true);
-  }, [activeTab, catalogSearch]);
+  }, [catalogSearch]);
 
   useEffect(() => {
     const fetchCatalogAndDocs = async () => {
@@ -65,15 +63,9 @@ export default function POSClient() {
           setDoctors(docs);
         }
         
-        if (activeTab === 'SERVICES') {
-          const res = await getServices(page, 20, catalogSearch);
-          setServices(prev => page === 1 ? res.services : [...prev, ...res.services]);
-          setHasMore(res.services.length === 20);
-        } else {
-          const res = await getCombos(catalogSearch);
-          setServices(res);
-          setHasMore(false);
-        }
+        const res = await getServices(page, 20, catalogSearch);
+        setServices(prev => page === 1 ? res.services : [...prev, ...res.services]);
+        setHasMore(res.services.length === 20);
       } catch (err) {
         console.error(err);
       } finally {
@@ -83,7 +75,7 @@ export default function POSClient() {
     };
     const timer = setTimeout(fetchCatalogAndDocs, 300);
     return () => clearTimeout(timer);
-  }, [activeTab, catalogSearch, page]);
+  }, [catalogSearch, page]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
@@ -111,24 +103,25 @@ export default function POSClient() {
     return () => clearTimeout(timer);
   }, [customerSearch]);
 
-  const addToCart = (item: any, type: 'SERVICE' | 'COMBO') => {
-    const existing = cartItems.find(c => c.id === item.id && c.type === type);
+  const addToCart = (item: any) => {
+    const existing = cartItems.find(c => c.id === item.id);
     if (existing) {
       setCartItems(cartItems.map(c => 
-        (c.id === item.id && c.type === type) 
+        (c.id === item.id) 
           ? { ...c, quantity: c.quantity + 1 }
           : c
       ));
     } else {
       setCartItems([...cartItems, {
-        type,
+        type: 'SERVICE',
         id: item.id,
-        name: type === 'SERVICE' ? item.item_name : item.combo_name,
-        price: type === 'SERVICE' ? item.service_prices?.[0]?.base_price || 0 : item.combo_price || 0,
+        name: item.item_name,
+        price: item.service_prices?.[0]?.base_price || 0,
         quantity: 1,
         discount_amount: 0,
-        final_price: type === 'SERVICE' ? item.service_prices?.[0]?.base_price || 0 : item.combo_price || 0,
-        doctor_id: null
+        final_price: item.service_prices?.[0]?.base_price || 0,
+        doctor_id: null,
+        category_id: item.category_id
       }]);
     }
   };
@@ -165,25 +158,23 @@ export default function POSClient() {
         return;
       }
       try {
-        const res = await calculateInvoice(cartItems, selectedCustomer?.id || null);
+        const res = await calculateInvoice(cartItems, selectedCustomer?.id || null, autoPromo);
         setSubTotal(res.subTotal);
         setTotalDiscount(res.totalDiscount);
         setFinalTotal(res.finalTotal);
         setAppliedPromotions(res.appliedPromotions || []);
         
-        // Calculate specific discounts to pass to recommendations
-        const specificDiscount = res.evaluatedCartItems.reduce((sum, item: any) => sum + item.discount_amount, 0);
+        const specificDiscount = res.evaluatedCartItems.reduce((sum: number, item: any) => sum + item.discount_amount, 0);
         const currentTotalAfterSpecific = res.subTotal - specificDiscount;
         
-        // Fetch recommendations
-        const recs = await getRecommendations(cartItems, currentTotalAfterSpecific);
+        const recs = autoPromo ? await getRecommendations(cartItems, currentTotalAfterSpecific) : [];
         setRecommendations(recs);
       } catch (err) {
         console.error("Calculate Error", err);
       }
     };
     doCalc();
-  }, [cartItems, selectedCustomer]);
+  }, [cartItems, selectedCustomer, autoPromo]);
 
   const handleCheckoutClick = () => {
     if (!selectedCustomer) {
@@ -228,48 +219,21 @@ export default function POSClient() {
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 
-  const formatTime = () => {
-    if (!currentTime) return '';
-    const hours = currentTime.getHours().toString().padStart(2, '0');
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-    const seconds = currentTime.getSeconds().toString().padStart(2, '0');
-    const day = currentTime.getDate().toString().padStart(2, '0');
-    const month = (currentTime.getMonth() + 1).toString().padStart(2, '0');
-    const year = currentTime.getFullYear();
-    return `${hours}:${minutes}:${seconds} - ${day}/${month}/${year}`;
-  };
-
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans p-6 pb-20 lg:pb-0">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-60px)] md:h-[calc(100vh-4rem)] bg-slate-50 overflow-y-auto md:overflow-hidden font-sans p-3 md:p-6 pb-20 md:pb-0 gap-4 md:gap-6 w-full">
       
       {/* LEFT PANEL: CATALOG */}
-      <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-[500px] md:min-h-0 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="flex items-center bg-slate-100 rounded-xl p-1 shrink-0 w-max">
-              <button
-                onClick={() => setActiveTab('SERVICES')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'SERVICES' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Dịch vụ lẻ
-              </button>
-              <button
-                onClick={() => setActiveTab('COMBOS')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'COMBOS' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Combo
-              </button>
-            </div>
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-              <input
-                className="w-full h-10 pl-10 pr-4 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none"
-                placeholder="Tìm sản phẩm / dịch vụ..."
-                value={catalogSearch}
-                onChange={(e) => setCatalogSearch(e.target.value)}
-              />
-            </div>
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input
+              className="w-full h-10 pl-10 pr-4 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none"
+              placeholder="Tìm dịch vụ..."
+              value={catalogSearch}
+              onChange={(e) => setCatalogSearch(e.target.value)}
+            />
           </div>
         </div>
 
@@ -282,7 +246,7 @@ export default function POSClient() {
           ) : services.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
               <span className="material-symbols-outlined text-4xl mb-2">inventory_2</span>
-              <p>Không tìm thấy sản phẩm nào</p>
+              <p>Không tìm thấy dịch vụ nào</p>
             </div>
           ) : (
             <>
@@ -290,17 +254,17 @@ export default function POSClient() {
                 {services.map(item => (
                   <div 
                     key={item.id} 
-                    onClick={() => addToCart(item, activeTab === 'SERVICES' ? 'SERVICE' : 'COMBO')}
+                    onClick={() => addToCart(item)}
                     className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/50 transition-all cursor-pointer flex flex-col group active:scale-95"
                   >
                     <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
-                      <span className="material-symbols-outlined">{activeTab === 'SERVICES' ? 'medical_services' : 'card_giftcard'}</span>
+                      <span className="material-symbols-outlined">medical_services</span>
                     </div>
                     <h4 className="font-semibold text-slate-800 text-sm line-clamp-2 mb-1 flex-1">
-                      {activeTab === 'SERVICES' ? item.item_name : item.combo_name}
+                      {item.item_name}
                     </h4>
                     <div className="text-primary font-bold text-[13px] sm:text-sm truncate mt-auto">
-                      {formatCurrency(activeTab === 'SERVICES' ? item.service_prices?.[0]?.base_price || 0 : item.combo_price || 0)}
+                      {formatCurrency(item.service_prices?.[0]?.base_price || 0)}
                     </div>
                   </div>
                 ))}
@@ -317,7 +281,7 @@ export default function POSClient() {
       </div>
 
       {/* RIGHT PANEL: CART / INVOICE */}
-      <div className="w-full lg:w-[400px] xl:w-[450px] bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col shrink-0 min-h-[500px]">
+      <div className="w-full md:w-[320px] lg:w-[400px] xl:w-[450px] bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col shrink-0 min-h-[500px] md:h-full">
         {/* Customer Selector */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Khách Hàng</label>
@@ -341,7 +305,7 @@ export default function POSClient() {
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person_search</span>
               <input
                 className="w-full h-11 pl-10 pr-10 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all outline-none shadow-sm"
-                placeholder="Tìm khách hàng theo tên, SĐT..."
+                placeholder="Tìm khách hàng..."
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
               />
@@ -352,7 +316,6 @@ export default function POSClient() {
                 <span className="material-symbols-outlined text-[18px]">add</span>
               </button>
               
-              {/* Dropdown Results */}
               {customerSearch && customers.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
                   {customers.map(cus => (
@@ -369,7 +332,6 @@ export default function POSClient() {
                         <div className="font-semibold text-sm text-slate-800">{cus.full_name}</div>
                         <div className="text-xs text-slate-500">{cus.phone_number || 'N/A'}</div>
                       </div>
-                      <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded-md text-slate-600">{cus.customer_type}</span>
                     </div>
                   ))}
                 </div>
@@ -380,17 +342,11 @@ export default function POSClient() {
 
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-4 bg-white">
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Giỏ Hàng ({cartItems.length})</label>
-            <div className="text-xs font-semibold text-slate-400 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">schedule</span>
-              {currentTime ? currentTime.toLocaleString('vi-VN') : ''}
-            </div>
-          </div>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 block">Giỏ Hàng ({cartItems.length})</label>
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-slate-300">
               <span className="material-symbols-outlined text-4xl mb-2">shopping_basket</span>
-              <p className="text-sm">Chưa có sản phẩm nào</p>
+              <p className="text-sm">Chưa có dịch vụ</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -402,20 +358,18 @@ export default function POSClient() {
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
                   </div>
-                  {item.type === 'SERVICE' && (
-                    <div className="mt-1">
-                      <select 
-                        className="w-full text-xs p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:border-primary outline-none"
-                        value={item.doctor_id || ''}
-                        onChange={(e) => updateItemDoctor(index, e.target.value ? Number(e.target.value) : null)}
-                      >
-                        <option value="">-- Chọn bác sĩ (Tùy chọn) --</option>
-                        {doctors.map(d => (
-                          <option key={d.id} value={d.id}>BS. {d.full_name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div className="mt-1">
+                    <select 
+                      className="w-full text-xs p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:border-primary outline-none"
+                      value={item.doctor_id || ''}
+                      onChange={(e) => updateItemDoctor(index, e.target.value ? Number(e.target.value) : null)}
+                    >
+                      <option value="">-- Chọn bác sĩ --</option>
+                      {doctors.map(d => (
+                        <option key={d.id} value={d.id}>BS. {d.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex justify-between items-center mt-1">
                     <div className="text-primary font-bold text-sm">{formatCurrency(item.price)}</div>
                     <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm">
@@ -443,7 +397,7 @@ export default function POSClient() {
             >
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[16px] text-amber-500 group-hover:scale-110 transition-transform">lightbulb</span>
-                Lời khuyên thông minh ({recommendations.length})
+                Lời khuyên ({recommendations.length})
               </div>
               <span className={`material-symbols-outlined transition-transform duration-300 ${isRecommendationsExpanded ? 'rotate-180' : ''}`}>
                 expand_more
@@ -475,6 +429,19 @@ export default function POSClient() {
               <span className="text-slate-500 font-medium">Tạm tính</span>
               <span className="text-slate-700 font-semibold">{formatCurrency(subTotal)}</span>
             </div>
+            
+            <div className="flex justify-between items-center text-sm mt-1 mb-2">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium hover:text-primary transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={autoPromo} 
+                  onChange={(e) => setAutoPromo(e.target.checked)} 
+                  className="w-4 h-4 accent-primary rounded border-slate-300 focus:ring-primary"
+                />
+                Tự động áp dụng KM
+              </label>
+            </div>
+
             <div className="flex justify-between items-start text-sm">
               <span className="text-emerald-600 font-medium flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]">loyalty</span>

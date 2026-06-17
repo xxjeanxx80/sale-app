@@ -16,6 +16,14 @@ const MENU_ITEMS = [
   { title: 'Khách hàng', href: '/customers', icon: 'person_book' },
 ];
 
+const BOTTOM_NAV_ITEMS = [
+  { title: 'POS', href: '/pos', icon: 'point_of_sale' },
+  { title: 'Lịch', href: '/booking', icon: 'calendar_month' },
+  { title: 'Hóa đơn', href: '/invoices', icon: 'receipt_long' },
+  { title: 'Dịch vụ', href: '/services', icon: 'medical_services' },
+  { title: 'Khách', href: '/customers', icon: 'person_book' },
+];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -120,34 +128,34 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="font-body-md text-body-md antialiased overflow-hidden bg-surface text-on-background h-screen">
       {/* Top Navigation Bar */}
-      <header className={`fixed top-0 right-0 ${isCollapsed ? 'left-20' : 'left-64'} h-16 bg-white/80 backdrop-blur-md border-b border-outline-variant/20 flex items-center justify-between px-8 z-40 transition-all duration-300`}>
-        <div className="flex items-center gap-4">
-          <h2 className="text-headline-md font-bold text-primary">Ứng dụng Thẩm Mỹ</h2>
+      <header className={`fixed top-0 right-0 left-0 ${isCollapsed ? 'md:left-20' : 'md:left-64'} h-16 bg-white/80 backdrop-blur-md border-b border-outline-variant/20 flex items-center justify-between px-4 md:px-8 z-40 transition-all duration-300 gap-4`}>
+        <div className="flex items-center gap-4 min-w-0">
+          <h2 className="text-lg md:text-xl font-bold text-primary truncate whitespace-nowrap">Ứng dụng Thẩm Mỹ</h2>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 md:gap-6 shrink-0">
+          <div className="flex items-center gap-1 md:gap-2">
             <button className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <button className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <button className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors hidden sm:block">
               <span className="material-symbols-outlined">help</span>
             </button>
           </div>
-          <div className="h-8 w-px bg-outline-variant/20"></div>
-          <div className="flex items-center gap-3 cursor-pointer hover:bg-surface-container-high p-2 rounded-xl transition-colors">
-            <div className="flex flex-col text-right mr-1">
-               <span className="font-label-md text-on-surface">{loggedInEmployee.full_name}</span>
-               <span className="text-[10px] uppercase font-bold text-slate-500">{loggedInEmployee.role}</span>
+          <div className="h-8 w-px bg-outline-variant/20 hidden md:block"></div>
+          <div className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-surface-container-high p-1 md:p-2 rounded-xl transition-colors">
+            <div className="hidden sm:flex flex-col text-right mr-1 min-w-0 max-w-[120px] md:max-w-[200px]">
+               <span className="font-label-md text-on-surface truncate whitespace-nowrap" title={loggedInEmployee.full_name}>{loggedInEmployee.full_name}</span>
+               <span className="text-[10px] uppercase font-bold text-slate-500 truncate whitespace-nowrap">{loggedInEmployee.role}</span>
             </div>
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center bg-primary text-white">
+            <div className="w-8 h-8 shrink-0 rounded-full overflow-hidden border border-outline-variant/30 flex items-center justify-center bg-primary text-white">
               <span className="material-symbols-outlined text-[18px]">person</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Side Navigation Bar */}
-      <nav className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-surface-container-low border-r border-outline-variant/20 flex flex-col z-50 transition-all duration-300`}>
+      {/* Side Navigation Bar (Desktop Only) */}
+      <nav className={`hidden md:flex fixed left-0 top-0 h-screen ${isCollapsed ? 'w-20' : 'w-64'} bg-surface-container-low border-r border-outline-variant/20 flex-col z-50 transition-all duration-300`}>
         <div className="p-4 mb-4">
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} mb-8 mt-2`}>
             <Link href="/" className={`flex items-center gap-3 ${isCollapsed ? 'hidden' : 'flex'} hover:opacity-80 transition-opacity`}>
@@ -194,7 +202,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </nav>
 
       {/* Main Layout Workspace */}
-      <main className={`pt-16 h-full flex relative bg-surface transition-all duration-300 ${isCollapsed ? 'ml-20 w-[calc(100%-5rem)]' : 'ml-64 w-[calc(100%-16rem)]'}`}>
+      <main className={`pt-16 pb-20 md:pb-0 h-full flex relative bg-surface transition-all duration-300 w-full ml-0 ${isCollapsed ? 'md:ml-20 md:w-[calc(100%-5rem)]' : 'md:ml-64 md:w-[calc(100%-16rem)]'}`}>
         {/* Background decorative elements for the 'neo-medical' feel */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary-container/5 blur-3xl"></div>
@@ -203,6 +211,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {children}
       </main>
+
+      {/* Bottom Navigation Bar (Mobile Only) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-slate-200 z-50 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        {BOTTOM_NAV_ITEMS.map(item => {
+          const isActive = pathname === item.href;
+          return (
+            <Link 
+              key={item.href} 
+              href={item.href}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-primary' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <div className={`w-12 h-8 rounded-full flex items-center justify-center transition-all ${isActive ? 'bg-primary/10' : 'bg-transparent'}`}>
+                <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
+              </div>
+              <span className={`text-[10px] font-semibold ${isActive ? 'text-primary' : 'text-slate-500'}`}>{item.title}</span>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

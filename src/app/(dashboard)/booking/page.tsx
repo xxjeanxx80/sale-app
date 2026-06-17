@@ -138,9 +138,10 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="p-4 lg:p-6 min-h-full flex flex-col lg:flex-row gap-6 pb-20 lg:pb-6">
-      {/* Left: Calendar View */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px] lg:min-h-0 lg:h-full">
+    <div className="max-w-7xl mx-auto w-full p-4 lg:p-6 h-[calc(100vh-4rem)] overflow-y-auto md:overflow-hidden pb-24 md:pb-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 h-auto md:h-full">
+        {/* Left: Calendar View */}
+        <div className="md:col-span-7 lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px] md:h-full">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -160,13 +161,13 @@ export default function BookingPage() {
         </div>
 
         {/* Slots Grid */}
-        <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-2 md:p-4 bg-slate-50/50">
           {loading ? (
              <div className="flex justify-center items-center h-40">
                <span className="material-symbols-outlined animate-spin text-3xl text-primary">progress_activity</span>
              </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {timeSlots.map(slot => {
                 const appt = getAppointmentForSlot(slot);
                 const isSelected = selectedSlot === slot;
@@ -174,10 +175,10 @@ export default function BookingPage() {
                 if (appt) {
                   return (
                     <div key={slot} className="flex border border-primary/30 rounded-xl overflow-hidden bg-primary/5 cursor-not-allowed">
-                      <div className="w-20 bg-primary/10 flex items-center justify-center font-bold text-primary border-r border-primary/20 shrink-0">
+                      <div className="w-16 lg:w-20 bg-primary/10 flex items-center justify-center font-bold text-primary border-r border-primary/20 shrink-0 text-sm lg:text-base">
                         {slot}
                       </div>
-                      <div className="p-3 flex-1">
+                      <div className="p-2 lg:p-3 flex-1">
                         <div className="font-semibold text-slate-800">{appt.customers?.full_name}</div>
                         <div className="text-xs text-slate-500 mt-1 line-clamp-1">
                           {appt.services?.item_name || 'Khám tổng quát'}
@@ -201,12 +202,12 @@ export default function BookingPage() {
                         : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
                     }`}
                   >
-                    <div className={`w-20 flex items-center justify-center font-bold border-r shrink-0 ${
+                    <div className={`w-16 lg:w-20 flex items-center justify-center font-bold border-r shrink-0 text-sm lg:text-base ${
                       isSelected ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-100'
                     }`}>
                       {slot}
                     </div>
-                    <div className="p-3 flex-1 flex items-center text-slate-400 font-medium">
+                    <div className="p-2 lg:p-3 flex-1 flex items-center text-slate-400 font-medium">
                       {isSelected ? <span className="text-emerald-600">Đang chọn...</span> : 'Trống'}
                     </div>
                   </div>
@@ -215,11 +216,11 @@ export default function BookingPage() {
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      {/* Right: Booking Form */}
-      <div className="w-full lg:w-[350px] xl:w-[400px] bg-white rounded-2xl shadow-xl border border-slate-200 p-6 flex flex-col shrink-0 min-h-[500px] lg:min-h-0 lg:h-full overflow-y-auto">
-        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+        {/* Right: Booking Form */}
+        <div className="md:col-span-5 lg:col-span-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 lg:p-6 flex flex-col min-h-[400px] md:h-full overflow-y-auto">
+        <h3 className="text-lg lg:text-xl font-bold text-slate-800 mb-4 lg:mb-6 flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">edit_calendar</span>
           Tạo Lịch Hẹn Mới
         </h3>
@@ -343,6 +344,7 @@ export default function BookingPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
       
       <CustomerModal 

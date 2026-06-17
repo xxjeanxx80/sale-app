@@ -96,10 +96,10 @@ export default function CustomerTable() {
 
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 flex flex-col">
-      <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
+      <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
         <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Danh sách Khách Hàng</h3>
-        <div className="flex items-center gap-4 w-full sm:w-1/2">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-4 w-full md:w-auto shrink-0">
+          <div className="relative flex-1 md:w-64">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
             <input
               className="h-10 pl-10 pr-4 rounded-xl bg-white border border-slate-200 focus:ring-2 focus:ring-primary focus:border-primary text-sm font-medium text-slate-700 w-full transition-all outline-none"
@@ -119,7 +119,64 @@ export default function CustomerTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto min-h-[400px]">
+      {/* Mobile Card View (Hybrid Layout) */}
+      <div className="md:hidden flex flex-col gap-4 p-4 bg-slate-50 min-h-[400px]">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="text-center py-12 text-slate-500">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2">
+              <span className="material-symbols-outlined text-3xl text-slate-300">person_off</span>
+            </div>
+            <div className="text-sm font-medium">Không tìm thấy khách hàng nào.</div>
+          </div>
+        ) : (
+          customers.map((cus) => (
+            <div key={cus.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-3 relative overflow-hidden">
+              {/* Highlight bar base on type */}
+              <div className={`absolute top-0 left-0 w-1.5 h-full ${cus.customer_type === 'VIP' ? 'bg-amber-500' : cus.customer_type === 'NEW' ? 'bg-blue-500' : 'bg-emerald-500'}`}></div>
+              
+              <div className="flex justify-between items-start pl-2">
+                <div>
+                  <div className="font-bold text-slate-800 text-base">{cus.full_name}</div>
+                  <div className="text-sm text-primary font-bold mt-0.5">{cus.phone_number || 'Chưa cập nhật SĐT'}</div>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <button onClick={() => handleEdit(cus)} className="w-8 h-8 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-colors border border-slate-100 bg-slate-50">
+                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                  </button>
+                  <button onClick={() => handleDelete(cus.id)} className="w-8 h-8 rounded-lg text-slate-600 hover:text-error hover:bg-error/10 flex items-center justify-center transition-colors border border-slate-100 bg-slate-50">
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 pl-2 mt-1">
+                <span className={`inline-flex items-center px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider ${getTypeColor(cus.customer_type)}`}>
+                  {getTypeName(cus.customer_type)}
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                  <span className="material-symbols-outlined text-[14px] mr-1">wc</span>
+                  {formatGender(cus.gender)}
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                  <span className="material-symbols-outlined text-[14px] mr-1">cake</span>
+                  {formatDate(cus.date_of_birth)}
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-slate-100 text-slate-600">
+                  <span className="material-symbols-outlined text-[14px] mr-1">work</span>
+                  {formatOccupation(cus.occupation)}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto min-h-[400px]">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-label-md">
