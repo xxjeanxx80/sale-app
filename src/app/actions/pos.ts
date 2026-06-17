@@ -166,12 +166,24 @@ export async function calculateInvoice(
             if (currentValue < requiredValue) {
               matched = false; break;
             }
-          } else if (cond.criteria_type === 'CATEGORY_SELECTED') {
+          } else if (cond.criteria_type === 'SERVICE_CATEGORY') {
             const targetCatId = cond.target_category_id;
-            const minQty = Number(cond.value_num || 1);
-            const maxQty = cond.value_num_max ? Number(cond.value_num_max) : Infinity;
+            let minQty = Number(cond.value_num || 1);
+            let maxQty = cond.value_num_max ? Number(cond.value_num_max) : Infinity;
+
+            if (cond.operator === 'EQ') { maxQty = minQty; }
+            else if (cond.operator === 'LTE') { minQty = 1; maxQty = Number(cond.value_num || 1); }
+            else if (cond.operator === 'GTE') { maxQty = Infinity; }
 
             let currentQty = 0;
+            // Count first to check if it strictly matches conditions like EQ or BETWEEN
+            const totalAvailableQty = tempItems.filter(i => i.category_id === targetCatId).reduce((sum, i) => sum + i.quantity, 0);
+            
+            // For specific rules, if it doesn't meet the minimum, fail early.
+            if (totalAvailableQty < minQty) {
+              matched = false; break;
+            }
+
             for (const item of tempItems) {
                if (item.category_id === targetCatId) {
                   while (item.quantity > 0 && currentQty < maxQty) {
@@ -270,6 +282,20 @@ export async function calculateInvoice(
       if (cond.criteria_type === 'CUSTOMER_ATTRIBUTE') {
         if (cond.value_text === 'FIRST_TIME') return customer?.customer_type === 'NEW';
         return false;
+      }
+      if (cond.criteria_type === 'SERVICE_CATEGORY') {
+        const targetCatId = cond.target_category_id;
+        const count = cartItems.filter(i => i.category_id === targetCatId).reduce((sum, i) => sum + i.quantity, 0);
+        let minQty = Number(cond.value_num || 1);
+        let maxQty = cond.value_num_max ? Number(cond.value_num_max) : Infinity;
+
+        if (cond.operator === 'BETWEEN') return count >= minQty && count <= maxQty;
+        if (cond.operator === 'EQ' || !cond.operator) return count === minQty;
+        if (cond.operator === 'GTE') return count >= minQty;
+        if (cond.operator === 'LTE') return count > 0 && count <= minQty;
+        if (cond.operator === 'GT') return count > minQty;
+        if (cond.operator === 'LT') return count > 0 && count < minQty;
+        return count >= minQty;
       }
       return false;
     };
