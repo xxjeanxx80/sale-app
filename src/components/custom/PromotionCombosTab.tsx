@@ -9,6 +9,7 @@ import SearchableSelect from './SearchableSelect';
 export default function PromotionCombosTab({ promotion }: { promotion: any }) {
   const router = useRouter();
   const [combos, setCombos] = useState<any[]>(promotion.combos || []);
+  const [searchTerm, setSearchTerm] = useState('');
   const [expandedCombos, setExpandedCombos] = useState<Set<number>>(new Set());
 
   const toggleCombo = (id: number) => {
@@ -133,24 +134,40 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
     }
   };
 
+  const filteredCombos = combos.filter(c => 
+    !searchTerm || (c.combo_name && c.combo_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h3 className="text-lg font-bold text-slate-800">Danh sách Gói Combo</h3>
-        <button onClick={handleAddCombo} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Tạo Gói Mới
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64 shrink-0">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm gói combo..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+            />
+          </div>
+          <button onClick={handleAddCombo} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shrink-0">
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span className="hidden sm:inline">Tạo Gói Mới</span>
+          </button>
+        </div>
       </div>
 
-      {combos.length === 0 ? (
+      {filteredCombos.length === 0 ? (
         <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-200">
           <span className="material-symbols-outlined text-4xl text-slate-300">view_cozy</span>
-          <p className="mt-2 text-slate-500">Chưa có gói Combo nào được thiết lập.</p>
+          <p className="mt-2 text-slate-500">Chưa có gói Combo nào được thiết lập hoặc tìm thấy.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {combos.map((combo) => {
+          {filteredCombos.map((combo) => {
             const isExpanded = expandedCombos.has(combo.id);
 
             return (

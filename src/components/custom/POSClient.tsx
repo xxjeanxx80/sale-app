@@ -473,10 +473,11 @@ export default function POSClient() {
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Right Column: Checkout Summary */}
-            <div className="w-full lg:w-[420px] bg-slate-50 flex flex-col shrink-0 border-t lg:border-t-0 lg:border-l border-slate-100 rounded-b-2xl lg:rounded-none lg:rounded-r-2xl lg:h-full">
-              <div className="flex-1 lg:overflow-y-auto p-4 md:p-6 space-y-6">
+          {/* Right Column: Checkout Summary */}
+          <div className="w-full lg:w-[420px] bg-white lg:bg-slate-50 flex flex-col shrink-0 border-t lg:border-t-0 lg:border-l border-slate-100 rounded-2xl lg:rounded-none shadow-xl lg:shadow-none lg:rounded-r-2xl lg:h-full overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                 
                 {/* Recommendations */}
                 {recommendations.length > 0 && (
@@ -589,7 +590,6 @@ export default function POSClient() {
               </div>
             </div>
           </div>
-        </div>
       )}
 
       <CustomerModal 

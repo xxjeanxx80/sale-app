@@ -8,15 +8,21 @@ export async function getEmployees(page = 1, pageSize = 20, search = '') {
   const take = pageSize;
 
   try {
-    const whereClause = search
-      ? {
-          OR: [
-            { full_name: { contains: search } },
-            { employee_code: { contains: search } },
-            { phone_number: { contains: search } }
-          ],
-        }
-      : {};
+    let whereClause: any = {};
+    if (search) {
+      const terms = search.trim().split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        whereClause = {
+          AND: terms.map(term => ({
+            OR: [
+              { full_name: { contains: term } },
+              { employee_code: { contains: term } },
+              { phone_number: { contains: term } }
+            ]
+          }))
+        };
+      }
+    }
 
     const [employees, totalCount] = await Promise.all([
       prisma.employees.findMany({

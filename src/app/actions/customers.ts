@@ -8,14 +8,20 @@ export async function getCustomers(page = 1, pageSize = 20, search = '') {
   const take = pageSize;
 
   try {
-    const whereClause = search
-      ? {
-          OR: [
-            { full_name: { contains: search } },
-            { phone_number: { contains: search } },
-          ],
-        }
-      : {};
+    let whereClause: any = {};
+    if (search) {
+      const terms = search.trim().split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        whereClause = {
+          AND: terms.map(term => ({
+            OR: [
+              { full_name: { contains: term } },
+              { phone_number: { contains: term } },
+            ]
+          }))
+        };
+      }
+    }
 
     const [customers, totalCount] = await Promise.all([
       prisma.customers.findMany({

@@ -10,6 +10,7 @@ import SearchableSelect from './SearchableSelect';
 export default function PromotionRulesTab({ promotion, ruleType }: { promotion: any, ruleType?: 'GLOBAL' | 'SPECIFIC' }) {
   const router = useRouter();
   const [rules, setRules] = useState<any[]>(promotion.promo_rules || []);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
 
   const [services, setServices] = useState<any[]>([]);
@@ -209,8 +210,11 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
     }
   };
 
-  const globalRules = rules.filter(r => !r.is_exclusive_rule);
-  const specificRules = rules.filter(r => r.is_exclusive_rule);
+  const filteredRules = rules.filter(r => 
+    !searchTerm || (r.rule_name && r.rule_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+  const globalRules = filteredRules.filter(r => !r.is_exclusive_rule);
+  const specificRules = filteredRules.filter(r => r.is_exclusive_rule);
 
   const renderRuleCard = (rule: any) => {
     const isExpanded = expandedRules.has(rule.id);
@@ -345,17 +349,29 @@ export default function PromotionRulesTab({ promotion, ruleType }: { promotion: 
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h3 className="text-lg font-bold text-slate-800">
           {ruleType === 'GLOBAL' ? 'Quy tắc Chung (Áp dụng Toàn Hóa Đơn)' : ruleType === 'SPECIFIC' ? 'Quy tắc Riêng (Khuyến Mãi Theo Dịch Vụ)' : 'Cấu trúc Quy tắc Khuyến mãi'}
         </h3>
-        <button onClick={() => {
-          setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC', is_stackable_with_others: true, max_applications: '' });
-          setIsRuleModalOpen(true);
-        }} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Thêm Quy Tắc Mới
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64 shrink-0">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm quy tắc..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+            />
+          </div>
+          <button onClick={() => {
+            setRuleForm({ id: 0, rule_name: '', is_exclusive_rule: ruleType === 'SPECIFIC', is_stackable_with_others: true, max_applications: '' });
+            setIsRuleModalOpen(true);
+          }} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shrink-0">
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span className="hidden sm:inline">Thêm Quy Tắc</span>
+          </button>
+        </div>
       </div>
 
       {((displayGlobal && globalRules.length === 0) && (displaySpecific && specificRules.length === 0)) && (

@@ -6,11 +6,18 @@ const prisma = new PrismaClient();
 
 export async function getCombos(search = '') {
   try {
+    let whereClause: any = { is_active: true };
+    if (search) {
+      const terms = search.trim().split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        whereClause.AND = terms.map(term => ({
+          combo_name: { contains: term }
+        }));
+      }
+    }
+
     const combos = await prisma.combos.findMany({
-      where: {
-        is_active: true,
-        combo_name: { contains: search }
-      },
+      where: whereClause,
       orderBy: { id: 'desc' }
     });
     // Convert decimal to number for NextJS

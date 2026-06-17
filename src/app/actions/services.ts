@@ -7,14 +7,20 @@ export async function getServices(page = 1, pageSize = 20, search = '', category
   const take = pageSize;
 
   try {
-    const whereClause: any = search
-      ? {
-          OR: [
-            { item_name: { contains: search } },
-            { item_code: { contains: search } },
-          ],
-        }
-      : {};
+    let whereClause: any = {};
+    if (search) {
+      const terms = search.trim().split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        whereClause = {
+          AND: terms.map(term => ({
+            OR: [
+              { item_name: { contains: term } },
+              { item_code: { contains: term } },
+            ]
+          }))
+        };
+      }
+    }
 
     if (categoryId && categoryId > 0) {
       // Find direct subcategories to include their services as well

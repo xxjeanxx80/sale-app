@@ -7,14 +7,20 @@ export async function getCategories(page = 1, pageSize = 20, search = '') {
   const take = pageSize;
 
   try {
-    const whereClause = search
-      ? {
-          OR: [
-            { category_name: { contains: search } },
-            { category_code: { contains: search } },
-          ],
-        }
-      : {};
+    let whereClause: any = {};
+    if (search) {
+      const terms = search.trim().split(/\s+/).filter(t => t.length > 0);
+      if (terms.length > 0) {
+        whereClause = {
+          AND: terms.map(term => ({
+            OR: [
+              { category_name: { contains: term } },
+              { category_code: { contains: term } },
+            ]
+          }))
+        };
+      }
+    }
 
     const [categories, totalCount] = await Promise.all([
       prisma.service_categories.findMany({
