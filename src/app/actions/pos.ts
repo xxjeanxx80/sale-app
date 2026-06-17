@@ -118,6 +118,7 @@ export async function calculateInvoice(
 
   // 2. Evaluate Specific Rules (Combos) using Greedy Algorithm
   let availableItems = cartItems.map(i => ({ ...i }));
+  let appliedNonConsumingRules = new Set<number>();
   
   while (true) {
     let bestRule: any = null;
@@ -126,6 +127,8 @@ export async function calculateInvoice(
     let bestRewardText = '';
 
     for (const rule of specificRules) {
+      if (appliedNonConsumingRules.has(rule.id)) continue;
+
       const groupedConditions = rule.rule_conditions.reduce((acc: any, cond: any) => {
         const group = cond.condition_group || 1;
         if (!acc[group]) acc[group] = [];
@@ -223,6 +226,10 @@ export async function calculateInvoice(
     }
 
     if (bestRule && bestDiscount > 0) {
+      if (bestConsumed.length === 0) {
+        appliedNonConsumingRules.add(bestRule.id);
+      }
+      
       discountActions.push({
         promotion_id: bestRule.promotion_id,
         promotion_name: bestRule.promotion_name,
