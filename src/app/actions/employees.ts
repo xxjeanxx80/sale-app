@@ -36,7 +36,7 @@ export async function getEmployees(page = 1, pageSize = 20, search = '') {
     ]);
 
     return {
-      employees,
+      employees: JSON.parse(JSON.stringify(employees)),
       totalPages: Math.ceil(totalCount / pageSize),
     };
   } catch (error) {
@@ -47,10 +47,11 @@ export async function getEmployees(page = 1, pageSize = 20, search = '') {
 
 export async function getDoctors() {
   try {
-    return await prisma.employees.findMany({
+    const docs = await prisma.employees.findMany({
       where: { role: 'DOCTOR', status: 'ACTIVE' },
       orderBy: { full_name: 'asc' }
     });
+    return JSON.parse(JSON.stringify(docs));
   } catch (error) {
     console.error('Error fetching doctors:', error);
     return [];
