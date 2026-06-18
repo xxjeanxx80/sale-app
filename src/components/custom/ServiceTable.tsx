@@ -32,10 +32,16 @@ export default function ServiceTable() {
       setLoading(true);
       try {
         const data = await getServices(page, 15, search, categoryId);
-        setServices(data.services);
-        setTotalPages(data.totalPages);
-      } catch (error) {
+        if (data.error) {
+           console.error("Server Action Error:", data.error);
+           alert("Lỗi máy chủ: " + data.error);
+        } else {
+           setServices(data.services);
+           setTotalPages(data.totalPages);
+        }
+      } catch (error: any) {
         console.error(error);
+        alert("Lỗi tải dữ liệu: " + (error.message || 'Vui lòng kiểm tra lại cấu hình CSDL trên Vercel'));
       } finally {
         setLoading(false);
       }

@@ -72,9 +72,9 @@ export async function getServices(page = 1, pageSize = 20, search = '', category
       totalPages: Math.ceil(totalCount / pageSize),
       currentPage: page,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching services:', error);
-    throw new Error('Failed to fetch services');
+    return { error: error.message || 'Failed to fetch services', services: [], totalCount: 0, totalPages: 1, currentPage: page };
   }
 }
 
