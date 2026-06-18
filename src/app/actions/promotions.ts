@@ -303,10 +303,7 @@ export async function duplicatePromotion(id: number) {
               reward_value: r.reward_value ? Number(r.reward_value) : null,
               target_service_id: r.target_service_id,
               gift_description: r.gift_description,
-              voucher_duration_days: r.voucher_duration_days,
-              installment_months: r.installment_months,
-              installment_rate: r.installment_rate ? Number(r.installment_rate) : null,
-              recurring_interval_months: r.recurring_interval_months
+              voucher_duration_days: r.voucher_duration_days
             }))
           });
         }

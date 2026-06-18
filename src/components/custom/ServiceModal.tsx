@@ -8,6 +8,7 @@ export default function ServiceModal({ isOpen, onClose, service, onSuccess }: { 
   const [formData, setFormData] = useState({ 
     item_code: '', 
     item_name: '', 
+    unit: '',
     category_id: 0, 
     base_price: '', 
     is_active: true 
@@ -22,12 +23,13 @@ export default function ServiceModal({ isOpen, onClose, service, onSuccess }: { 
         setFormData({
           item_code: service.item_code || '',
           item_name: service.item_name || '',
+          unit: service.unit || '',
           category_id: service.category_id || 0,
           base_price: service.service_prices?.[0]?.base_price?.toString() || '0',
           is_active: service.is_active ?? true,
         });
       } else {
-        setFormData({ item_code: '', item_name: '', category_id: 0, base_price: '', is_active: true });
+        setFormData({ item_code: '', item_name: '', unit: '', category_id: 0, base_price: '', is_active: true });
       }
       setError('');
       getAllCategoriesMin().then(setCategories);
@@ -85,9 +87,15 @@ export default function ServiceModal({ isOpen, onClose, service, onSuccess }: { 
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-on-surface mb-1">Tên Dịch vụ</label>
-          <input required type="text" className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-md" value={formData.item_name} onChange={e => setFormData({...formData, item_name: e.target.value})} placeholder="Ví dụ: Triệt lông nách" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block text-sm font-medium text-on-surface mb-1">Tên Dịch vụ</label>
+            <input required type="text" className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-md" value={formData.item_name} onChange={e => setFormData({...formData, item_name: e.target.value})} placeholder="Ví dụ: Triệt lông nách" />
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block text-sm font-medium text-on-surface mb-1">Đơn vị</label>
+            <input type="text" className="w-full px-4 py-2 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-md" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} placeholder="Ví dụ: Lần, Liệu trình..." />
+          </div>
         </div>
 
         <div>

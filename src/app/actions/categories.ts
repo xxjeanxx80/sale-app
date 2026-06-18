@@ -42,7 +42,7 @@ export async function getCategories(page = 1, pageSize = 20, search = '') {
     ]);
 
     return {
-      categories,
+      categories: JSON.parse(JSON.stringify(categories)),
       totalCount,
       totalPages: Math.ceil(totalCount / pageSize),
       currentPage: page,

@@ -29,7 +29,6 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
     combo_name: '',
     original_total_price: 0,
     combo_price: 0,
-    allow_extra_rules: false,
     max_slots: 0,
     is_active: true
   });
@@ -60,7 +59,7 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
   // Combo Handlers
   const handleAddCombo = () => {
     setEditingCombo(null);
-    setComboForm({ combo_name: '', original_total_price: 0, combo_price: 0, allow_extra_rules: false, max_slots: 0, is_active: true });
+    setComboForm({ combo_name: '', original_total_price: 0, combo_price: 0, max_slots: 0, is_active: true });
     setIsComboModalOpen(true);
   };
 
@@ -70,7 +69,6 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
       combo_name: c.combo_name,
       original_total_price: Number(c.original_total_price),
       combo_price: Number(c.combo_price),
-      allow_extra_rules: c.allow_extra_rules,
       max_slots: c.max_slots || 0,
       is_active: c.is_active
     });
@@ -134,7 +132,7 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
     }
   };
 
-  const filteredCombos = combos.filter(c => 
+  const filteredCombos = combos.filter(c =>
     !searchTerm || (c.combo_name && c.combo_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -145,9 +143,9 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64 shrink-0">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm gói combo..." 
+            <input
+              type="text"
+              placeholder="Tìm kiếm gói combo..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
@@ -171,72 +169,72 @@ export default function PromotionCombosTab({ promotion }: { promotion: any }) {
             const isExpanded = expandedCombos.has(combo.id);
 
             return (
-            <div key={combo.id} className="border border-slate-200 rounded-2xl overflow-hidden transition-all bg-white shadow-sm">
-              <div 
-                className="bg-indigo-50/30 hover:bg-indigo-50/80 p-4 border-b border-slate-200 flex justify-between items-center cursor-pointer transition-colors group"
-                onClick={() => toggleCombo(combo.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary/10 text-primary' : 'bg-white border border-slate-200 text-slate-400 group-hover:text-primary'}`}>
-                    <span className="material-symbols-outlined text-[20px] transition-transform duration-300" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>chevron_right</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800">{combo.combo_name}</h4>
-                    <div className="text-sm text-slate-500 mt-1 flex gap-4">
-                      <span>Giá gốc: <span className="line-through">{Number(combo.original_total_price).toLocaleString()}đ</span></span>
-                      <span className="text-primary font-semibold">Giá Combo: {Number(combo.combo_price).toLocaleString()}đ</span>
+              <div key={combo.id} className="border border-slate-200 rounded-2xl overflow-hidden transition-all bg-white shadow-sm">
+                <div
+                  className="bg-indigo-50/30 hover:bg-indigo-50/80 p-4 border-b border-slate-200 flex justify-between items-center cursor-pointer transition-colors group"
+                  onClick={() => toggleCombo(combo.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary/10 text-primary' : 'bg-white border border-slate-200 text-slate-400 group-hover:text-primary'}`}>
+                      <span className="material-symbols-outlined text-[20px] transition-transform duration-300" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>chevron_right</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800">{combo.combo_name}</h4>
+                      <div className="text-sm text-slate-500 mt-1 flex gap-4">
+                        <span>Giá gốc: <span className="line-through">{Number(combo.original_total_price).toLocaleString()}đ</span></span>
+                        <span className="text-primary font-semibold">Giá Combo: {Number(combo.combo_price).toLocaleString()}đ</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={() => handleEditCombo(combo)} className="p-2 text-blue-500 hover:bg-blue-100 bg-white rounded-lg border border-slate-100 shadow-sm transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
-                  </button>
-                  <button onClick={() => handleDeleteCombo(combo.id)} className="p-2 text-error hover:bg-error/10 bg-white rounded-lg border border-slate-100 shadow-sm transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                  </button>
-                </div>
-              </div>
-
-              {isExpanded && (
-                <div className="p-4 animate-in slide-in-from-top-2 duration-200">
-                  <div className="flex justify-between items-center mb-3">
-                    <h5 className="font-medium text-sm text-slate-700">Các dịch vụ trong gói:</h5>
-                    <button onClick={() => handleAddItem(combo.id)} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-                      <span className="material-symbols-outlined text-[16px]">add_circle</span> Thêm dịch vụ
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => handleEditCombo(combo)} className="p-2 text-blue-500 hover:bg-blue-100 bg-white rounded-lg border border-slate-100 shadow-sm transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                    <button onClick={() => handleDeleteCombo(combo.id)} className="p-2 text-error hover:bg-error/10 bg-white rounded-lg border border-slate-100 shadow-sm transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
                   </div>
-                  {combo.combo_items && combo.combo_items.length > 0 ? (
-                    <table className="w-full text-sm text-left border border-slate-100 rounded-lg overflow-hidden">
-                      <thead className="bg-slate-50 text-slate-500">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Dịch vụ</th>
-                          <th className="px-3 py-2 font-medium text-center">Số lượng</th>
-                          <th className="px-3 py-2 font-medium text-right">Phân bổ giá</th>
-                          <th className="px-3 py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {combo.combo_items.map((item: any) => (
-                          <tr key={item.id} className="border-t border-slate-100">
-                            <td className="px-3 py-2 font-medium text-slate-700">{item.services?.item_name || 'Dịch vụ đã xóa'}</td>
-                            <td className="px-3 py-2 text-center">{item.quantity}</td>
-                            <td className="px-3 py-2 text-right">{Number(item.allocated_price || 0).toLocaleString()}đ</td>
-                            <td className="px-3 py-2 text-right">
-                              <button onClick={() => handleDeleteItem(item.id)} className="text-slate-400 hover:text-error transition-colors"><span className="material-symbols-outlined text-[16px]">close</span></button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="text-center py-4 bg-slate-50 rounded-lg border border-slate-100">
-                      <p className="text-sm text-slate-400 italic">Chưa có dịch vụ nào trong gói này.</p>
-                    </div>
-                  )}
                 </div>
-              )}
-            </div>
+
+                {isExpanded && (
+                  <div className="p-4 animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex justify-between items-center mb-3">
+                      <h5 className="font-medium text-sm text-slate-700">Các dịch vụ trong gói:</h5>
+                      <button onClick={() => handleAddItem(combo.id)} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                        <span className="material-symbols-outlined text-[16px]">add_circle</span> Thêm dịch vụ
+                      </button>
+                    </div>
+                    {combo.combo_items && combo.combo_items.length > 0 ? (
+                      <table className="w-full text-sm text-left border border-slate-100 rounded-lg overflow-hidden">
+                        <thead className="bg-slate-50 text-slate-500">
+                          <tr>
+                            <th className="px-3 py-2 font-medium">Dịch vụ</th>
+                            <th className="px-3 py-2 font-medium text-center">Số lượng</th>
+                            <th className="px-3 py-2 font-medium text-right">Phân bổ giá</th>
+                            <th className="px-3 py-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {combo.combo_items.map((item: any) => (
+                            <tr key={item.id} className="border-t border-slate-100">
+                              <td className="px-3 py-2 font-medium text-slate-700">{item.services?.item_name || 'Dịch vụ đã xóa'}</td>
+                              <td className="px-3 py-2 text-center">{item.quantity}</td>
+                              <td className="px-3 py-2 text-right">{Number(item.allocated_price || 0).toLocaleString()}đ</td>
+                              <td className="px-3 py-2 text-right">
+                                <button onClick={() => handleDeleteItem(item.id)} className="text-slate-400 hover:text-error transition-colors"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-center py-4 bg-slate-50 rounded-lg border border-slate-100">
+                        <p className="text-sm text-slate-400 italic">Chưa có dịch vụ nào trong gói này.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

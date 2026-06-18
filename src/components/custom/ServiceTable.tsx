@@ -128,7 +128,7 @@ export default function ServiceTable() {
                 <div className="flex justify-between items-start gap-2">
                   <div>
                     <div className="font-bold text-slate-800 text-base">{service.item_name}</div>
-                    <div className="text-xs text-slate-500 font-medium mt-1">Mã: {service.item_code}</div>
+                    <div className="text-xs text-slate-500 font-medium mt-1">Mã: {service.item_code} {service.unit && <span className="mx-1 text-slate-300">•</span>} {service.unit && <span className="text-slate-600">Đơn vị: {service.unit}</span>}</div>
                   </div>
                   <div className="shrink-0 flex gap-1.5">
                     <button onClick={() => handleEdit(service)} className="w-8 h-8 rounded-lg text-slate-600 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-colors border border-slate-100 bg-slate-50">
@@ -145,7 +145,7 @@ export default function ServiceTable() {
                     <div className="flex flex-wrap gap-2 mb-1.5">
                       <span className="inline-flex items-center px-2 py-1 rounded text-[11px] font-semibold bg-purple-100 text-purple-800">
                         <span className="material-symbols-outlined text-[14px] mr-1">category</span>
-                        {service.service_categories?.category_name || service.service_group_code}
+                        {service.service_categories?.category_name || 'Chưa phân nhóm'}
                       </span>
                     </div>
                     {service.is_active ? (
@@ -172,6 +172,7 @@ export default function ServiceTable() {
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Mã HIS</th>
               <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Tên Dịch Vụ</th>
+              <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Đơn Vị</th>
               <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider">Giá tiền</th>
               <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider hidden sm:table-cell">Nhóm</th>
               <th className="py-4 px-6 font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase tracking-wider text-right">Trạng Thái</th>
@@ -181,13 +182,13 @@ export default function ServiceTable() {
           <tbody className="divide-y divide-slate-50">
             {loading ? (
               <tr>
-                <td colSpan={6} className="py-6 px-6 text-center text-on-surface-variant">
+                <td colSpan={7} className="py-6 px-6 text-center text-on-surface-variant">
                   Đang tải dữ liệu...
                 </td>
               </tr>
             ) : services.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-6 px-6 text-center text-on-surface-variant">
+                <td colSpan={7} className="py-6 px-6 text-center text-on-surface-variant">
                   Không tìm thấy dịch vụ nào.
                 </td>
               </tr>
@@ -202,12 +203,15 @@ export default function ServiceTable() {
                     <td className="py-4 px-6">
                       <div className="font-label-md text-label-md text-on-background font-semibold">{service.item_name}</div>
                     </td>
+                    <td className="py-4 px-6 font-body-md text-body-md text-on-surface-variant">
+                      {service.unit || '-'}
+                    </td>
                     <td className="py-4 px-6 font-label-md text-label-md text-primary font-semibold">
                       {Number(price).toLocaleString('vi-VN')} ₫
                     </td>
                     <td className="py-4 px-6 hidden sm:table-cell">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                        {service.service_categories?.category_name || service.service_group_code}
+                        {service.service_categories?.category_name || 'Chưa phân nhóm'}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">

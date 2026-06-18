@@ -31,7 +31,6 @@ model combo_items {
   service_id       Int?
   quantity         Int?      @default(1)
   allocated_price  Decimal?  @db.Decimal(15, 2)
-  item_description String?   @db.VarChar(500)
   combos           combos    @relation(fields: [combo_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "combo_items_ibfk_1")
   services         services? @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "combo_items_ibfk_2")
 
@@ -209,7 +208,6 @@ model promotions {
   promo_rules              promo_rules[]
   promotion_branches       promotion_branches[]
   promotion_categories     promotion_categories[]
-  voucher_tiers            voucher_tiers[]
 
   @@index([is_active, start_date, end_date], map: "idx_promotions_active_dates")
   @@index([promotion_type], map: "idx_promotions_type")
@@ -262,7 +260,6 @@ model service_categories {
   category_code            String                 @unique(map: "category_code") @db.VarChar(50)
   category_name            String                 @db.VarChar(255)
   category_level           Int                    @default(1) @db.TinyInt
-  display_order            Int?
   created_at               DateTime?              @default(now()) @db.Timestamp(0)
   promotion_categories     promotion_categories[]
   rule_conditions          rule_conditions[]
@@ -299,7 +296,6 @@ model services {
   item_code          String             @unique(map: "item_code") @db.VarChar(50)
   item_name          String             @db.VarChar(500)
   unit               String?            @db.VarChar(50)
-  tags               Json?
   duration_minutes     Int?                   @default(30)
   is_active          Boolean?           @default(true)
   created_at         DateTime?          @default(now()) @db.Timestamp(0)
@@ -315,19 +311,7 @@ model services {
   @@index([category_id, is_active], map: "idx_services_category")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model voucher_tiers {
-  id                    Int        @id @default(autoincrement())
-  promotion_id          Int
-  min_bill_amount       Decimal    @db.Decimal(15, 2)
-  voucher_value         Decimal    @db.Decimal(15, 2)
-  voucher_duration_days Int
-  promotions            promotions @relation(fields: [promotion_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "voucher_tiers_ibfk_1")
 
-  @@unique([promotion_id, min_bill_amount], map: "uq_promotion_tier")
-  @@index([promotion_id, min_bill_amount], map: "idx_voucher_tiers_promotion")
-  @@index([promotion_id, min_bill_amount], map: "idx_vt_promo_bill")
-}
 
 model appointments {
   id               Int                 @id @default(autoincrement())

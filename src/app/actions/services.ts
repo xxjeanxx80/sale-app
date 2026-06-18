@@ -67,7 +67,7 @@ export async function getServices(page = 1, pageSize = 20, search = '', category
     }));
 
     return {
-      services: serializedServices,
+      services: JSON.parse(JSON.stringify(serializedServices)),
       totalCount,
       totalPages: Math.ceil(totalCount / pageSize),
       currentPage: page,
@@ -78,12 +78,13 @@ export async function getServices(page = 1, pageSize = 20, search = '', category
   }
 }
 
-export async function createService(data: { item_code: string; item_name: string; category_id: number; base_price: number; is_active: boolean }) {
+export async function createService(data: { item_code: string; item_name: string; category_id: number; base_price: number; is_active: boolean; unit?: string }) {
   try {
     const service = await prisma.services.create({
       data: {
         item_code: data.item_code,
         item_name: data.item_name,
+        unit: data.unit || null,
         category_id: data.category_id,
         is_active: data.is_active,
         service_prices: {
@@ -103,7 +104,7 @@ export async function createService(data: { item_code: string; item_name: string
   }
 }
 
-export async function updateService(id: number, data: { item_code: string; item_name: string; category_id: number; base_price: number; is_active: boolean }) {
+export async function updateService(id: number, data: { item_code: string; item_name: string; category_id: number; base_price: number; is_active: boolean; unit?: string }) {
   try {
     const currentPrice = await prisma.service_prices.findFirst({
       where: { service_id: id, is_current: true }
@@ -112,6 +113,7 @@ export async function updateService(id: number, data: { item_code: string; item_
     const updateData: any = {
       item_code: data.item_code,
       item_name: data.item_name,
+      unit: data.unit || null,
       category_id: data.category_id,
       is_active: data.is_active,
       updated_at: new Date()

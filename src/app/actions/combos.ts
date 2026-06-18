@@ -21,11 +21,12 @@ export async function getCombos(search = '') {
       orderBy: { id: 'desc' }
     });
     // Convert decimal to number for NextJS
-    return combos.map((c: any) => ({
+    const mappedCombos = combos.map((c: any) => ({
       ...c,
       combo_price: Number(c.combo_price),
       original_total_price: Number(c.original_total_price)
     }));
+    return JSON.parse(JSON.stringify(mappedCombos));
   } catch (error) {
     console.error('Error fetching combos:', error);
     return [];
@@ -40,7 +41,6 @@ export async function createCombo(promotion_id: number, data: any) {
         combo_name: data.combo_name,
         original_total_price: data.original_total_price,
         combo_price: data.combo_price,
-        allow_extra_rules: data.allow_extra_rules ?? false,
         max_slots: data.max_slots || null,
         is_active: data.is_active ?? true,
       }
@@ -60,8 +60,7 @@ export async function updateCombo(id: number, data: any) {
         combo_name: data.combo_name,
         original_total_price: data.original_total_price,
         combo_price: data.combo_price,
-        allow_extra_rules: data.allow_extra_rules,
-        max_slots: data.max_slots,
+        max_slots: data.max_slots || null,
         is_active: data.is_active,
       }
     });
